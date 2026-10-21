@@ -126,6 +126,22 @@ class AppState extends ChangeNotifier {
     if (save) prefs.setInt('active', i);
   }
 
+  /// Hesabı doğrulamadan/açmadan yalnızca kaydeder (kayıtlı listede kalır).
+  Future<void> saveAccountOnly(Account a) async {
+    final i = accounts.indexWhere((x) => x.key == a.key);
+    if (i >= 0) {
+      accounts[i] = a;
+    } else {
+      accounts.add(a);
+    }
+    await _saveAccounts();
+    notifyListeners();
+  }
+
+  String? get draft => prefs.getString('loginDraft');
+  Future<void> setDraft(String? v) =>
+      v == null ? prefs.remove('loginDraft') : prefs.setString('loginDraft', v);
+
   Future<void> addAccount(Account a) async {
     final i = accounts.indexWhere((x) => x.key == a.key);
     if (i >= 0) {
