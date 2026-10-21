@@ -18,8 +18,17 @@ class _LoginScreenState extends State<LoginScreen> {
   final _host = TextEditingController();
   final _user = TextEditingController();
   final _pass = TextEditingController();
+  final _fName = FocusNode(), _fHost = FocusNode(), _fUser = FocusNode(), _fPass = FocusNode();
   bool _busy = false, _showPass = false;
   String? _error;
+
+  @override
+  void dispose() {
+    for (final f in [_fName, _fHost, _fUser, _fPass]) {
+      f.dispose();
+    }
+    super.dispose();
+  }
 
   Future<void> _connect() async {
     final host = _host.text.trim();
@@ -62,7 +71,9 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: widget.canClose ? AppBar(title: const Text('Hesaplar')) : null,
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView(
+          child: FocusTraversalGroup(
+           policy: ReadingOrderTraversalPolicy(),
+           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 460),
@@ -108,13 +119,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: _name,
+                    focusNode: _fName,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) => _fHost.requestFocus(),
                     decoration: const InputDecoration(
                         labelText: 'Hesap adı (isteğe bağlı)', border: OutlineInputBorder()),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _host,
+                    focusNode: _fHost,
                     keyboardType: TextInputType.url,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) => _fUser.requestFocus(),
                     decoration: const InputDecoration(
                         labelText: 'Sunucu adresi',
                         hintText: 'http://sunucu.com:8080',
@@ -123,14 +141,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _user,
+                    focusNode: _fUser,
                     autocorrect: false,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) => _fPass.requestFocus(),
                     decoration: const InputDecoration(
                         labelText: 'Kullanıcı adı', border: OutlineInputBorder()),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _pass,
+                    focusNode: _fPass,
                     obscureText: !_showPass,
+                    textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _connect(),
                     decoration: InputDecoration(
                       labelText: 'Şifre',
@@ -159,6 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
+          ),
           ),
         ),
       ),
