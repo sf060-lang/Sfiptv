@@ -64,3 +64,33 @@ jobs:
         with:
           name: IPTVPro-Windows
           path: dist/*
+
+  release:
+    # Derlemeler bitince APK ve EXE dosyalarini "Releases" sayfasina koyar (dogrudan indirilebilir)
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Dosyalari adlandir
+        run: |
+          mkdir -p release
+          for f in artifacts/IPTVPro-Android/*.apk; do
+            b=$(basename "$f" .apk); b=${b#app-}; b=${b%-release}
+            [ "$b" = "release" ] && b="universal"
+            cp "$f" "release/SF-IPTV-Player-$b.apk"
+          done
+          cp artifacts/IPTVPro-Windows/IPTVPro-Setup.exe release/SF-IPTV-Player-Windows-Setup.exe
+          cp artifacts/IPTVPro-Windows/IPTVPro-Windows-portable.zip release/SF-IPTV-Player-Windows-portable.zip
+          ls -la release
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: SF İPTV Player v1.0.${{ github.run_number }}
+          body: |
+            **Android / Google TV / Android box:** `SF-IPTV-Player-universal.apk` (her cihazda çalışır). Telefon ve yeni kutular için `arm64-v8a` daha küçüktür; eski/32-bit kutular için `armeabi-v7a`.
+            **Windows:** `SF-IPTV-Player-Windows-Setup.exe` (kurulum) veya `SF-IPTV-Player-Windows-portable.zip` (kurulumsuz).
+          files: release/*
