@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'prefs.dart';
 
 import 'models.dart';
 import 'xtream_api.dart';
@@ -31,7 +31,7 @@ class AppState extends ChangeNotifier {
   AppState(this.prefs) {
     _loadGlobal();
   }
-  final SharedPreferences prefs;
+  final Prefs prefs;
 
   // ---- genel ayarlar ----
   List<Account> accounts = [];

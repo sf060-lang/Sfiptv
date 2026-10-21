@@ -244,6 +244,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+                  if (context.read<AppState>().prefs.error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                          'Uyarı: kayıt belleği açılamadı, bilgiler kalıcı olmayabilir. (${context.read<AppState>().prefs.error})',
+                          style: const TextStyle(color: Colors.orangeAccent)),
+                    ),
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 12),
@@ -257,13 +264,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? const SizedBox(
                             width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.login),
-                    label: const Text('Bağlan'),
+                    label: const Text('Bağlan ve kaydet'),
                   ),
-                  const SizedBox(height: 10),
-                  OutlinedButton.icon(
-                    onPressed: _busy ? null : _saveOnly,
-                    icon: const Icon(Icons.save_outlined),
-                    label: const Text('Kaydet (kullanıcı ekle)'),
                   ),
                 ],
               ),
