@@ -6,6 +6,11 @@ set -euo pipefail
 flutter create --project-name iptv_pro --org com.iptvpro --platforms=android,windows .
 rm -rf test   # sablon test dosyasi bu uygulamaya uymuyor
 
+# Sabit imza anahtari: her surum ayni imzayla cikar, boylece uygulama
+# eskisinin ustune guncellenir ve kayitli hesaplar silinmez.
+mkdir -p "$HOME/.android"
+[ -f tool/debug.keystore ] && cp tool/debug.keystore "$HOME/.android/debug.keystore" || true
+
 M=android/app/src/main/AndroidManifest.xml
 
 # Internet izni + http (sifrelenmemis) yayinlara izin + uygulama adi

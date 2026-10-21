@@ -104,7 +104,16 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
         'reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_delay_max=5');
     if (!isMobile) {
       await set('hwdec', st.hwAccel ? 'auto-safe' : 'no');
+    } else {
+      // Android / TV: kopyalamalı MediaCodec en uyumlusu; olmazsa yazılım çözücü.
+      await set('hwdec', st.hwAccel ? 'mediacodec-copy' : 'no');
     }
+    // Titreme/atlamayı azalt: geç kalan kareleri at, çoklu iş parçacığı kullan.
+    await set('framedrop', 'vo');
+    await set('vd-lavc-threads', '4');
+    await set('vd-lavc-fast', 'yes');
+    await set('video-sync', 'audio');
+    await set('interpolation', 'no');
   }
 
   Future<void> _open() async {

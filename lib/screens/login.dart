@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../models.dart';
@@ -21,6 +22,28 @@ class _LoginScreenState extends State<LoginScreen> {
   final _fName = FocusNode(), _fHost = FocusNode(), _fUser = FocusNode(), _fPass = FocusNode();
   bool _busy = false, _showPass = false;
   String? _error;
+
+  // Kumandada yukarı/aşağı tuşları alanlar arasında gezdirir (klavye kapalıyken de).
+  KeyEventResult _vkey(FocusNode n, KeyEvent e) {
+    if (e is! KeyDownEvent) return KeyEventResult.ignored;
+    if (e.logicalKey == LogicalKeyboardKey.arrowDown) {
+      FocusScope.of(context).nextFocus();
+      return KeyEventResult.handled;
+    }
+    if (e.logicalKey == LogicalKeyboardKey.arrowUp) {
+      FocusScope.of(context).previousFocus();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    for (final f in [_fName, _fHost, _fUser, _fPass]) {
+      f.onKeyEvent = _vkey;
+    }
+  }
 
   @override
   void dispose() {
