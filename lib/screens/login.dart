@@ -266,7 +266,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         : const Icon(Icons.login),
                     label: const Text('Bağlan ve kaydet'),
                   ),
-                  ),
                 ],
               ),
             ),
