@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import 'march.dart';
 import 'models.dart';
 import 'store.dart';
 import 'teams.dart';
@@ -62,7 +63,10 @@ class TeamGrid extends StatelessWidget {
             ),
             label: Text(t.name),
             selected: s.team == t.id,
-            onSelected: (_) => s.setTeam(t.id),
+            onSelected: (_) {
+              s.setTeam(t.id);
+              March.play(t.id);
+            },
           ),
       ],
     );

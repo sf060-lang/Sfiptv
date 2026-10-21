@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:provider/provider.dart';
 
+import 'march.dart';
 import 'models.dart';
 import 'prefs.dart';
 import 'screens/home.dart';
@@ -50,6 +51,10 @@ class _IptvAppState extends State<IptvApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Her açılışta kayıtlı takımın marşından 3 sn çal
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      March.play(context.read<AppState>().team);
+    });
   }
 
   @override
