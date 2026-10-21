@@ -53,7 +53,7 @@ class _IptvAppState extends State<IptvApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     // Her açılışta kayıtlı takımın marşından 3 sn çal
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      March.play(context.read<AppState>().team);
+      March.launch(context.read<AppState>().team);
     });
   }
 

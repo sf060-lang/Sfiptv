@@ -324,6 +324,35 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Dış oynatıcı: '' = dahili, 'chooser' = her seferinde sor, aksi halde paket adı
+  String get extPlayer => prefs.getString('ext') ?? '';
+  List<List<String>> get customPlayers => [
+        for (final e in prefs.getStringList('extCustom') ?? <String>[])
+          if (e.contains('|')) e.split('|')
+      ];
+  void setExtPlayer(String v) {
+    prefs.setString('ext', v);
+    notifyListeners();
+  }
+
+  void addCustomPlayer(String name, String pkg) {
+    final l = prefs.getStringList('extCustom') ?? <String>[];
+    l.add('${name.replaceAll('|', ' ')}|${pkg.trim()}');
+    prefs.setStringList('extCustom', l);
+    prefs.setString('ext', pkg.trim());
+    notifyListeners();
+  }
+
+  void removeCustomPlayer(String pkg) {
+    final l = [
+      for (final e in prefs.getStringList('extCustom') ?? <String>[])
+        if (!e.endsWith('|$pkg')) e
+    ];
+    prefs.setStringList('extCustom', l);
+    if (extPlayer == pkg) prefs.setString('ext', '');
+    notifyListeners();
+  }
+
   void setBuf(String id) {
     buf = id;
     prefs.setString('buf', id);

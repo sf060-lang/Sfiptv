@@ -10,6 +10,76 @@ import 'login.dart';
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
+  static const _presets = <List<String>>[
+    ['', 'Dahili oynatıcı (önerilen)'],
+    ['org.videolan.vlc', 'VLC'],
+    ['com.mxtech.videoplayer.ad', 'MX Player'],
+    ['com.mxtech.videoplayer.pro', 'MX Player Pro'],
+    ['com.brouken.player', 'Just Player'],
+    ['org.xbmc.kodi', 'Kodi'],
+    ['chooser', 'Her seferinde sor (yüklü oynatıcılardan seç)'],
+  ];
+
+  List<Widget> _players(BuildContext context, AppState s) {
+    Widget tile(String pkg, String name, {bool custom = false}) => ListTile(
+          leading: Icon(s.extPlayer == pkg ? Icons.radio_button_checked : Icons.radio_button_off),
+          title: Text(name),
+          subtitle: pkg.isEmpty || pkg == 'chooser' ? null : Text(pkg),
+          selected: s.extPlayer == pkg,
+          onTap: () => s.setExtPlayer(pkg),
+          trailing: custom
+              ? IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => s.removeCustomPlayer(pkg))
+              : null,
+        );
+    return [
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Text('Kanalları hangi oynatıcıda açmak istediğini seç. VLC, MX Player gibi '
+            'oynatıcıların telefona/TV\'ye kurulu olması gerekir (Play Store).'),
+      ),
+      for (final p in _presets) tile(p[0], p[1]),
+      for (final p in s.customPlayers) tile(p[1], p[0], custom: true),
+      ListTile(
+        leading: const Icon(Icons.add),
+        title: const Text('Başka oynatıcı ekle'),
+        subtitle: const Text('Oynatıcının paket adını gir (ör. org.videolan.vlc)'),
+        onTap: () => _addPlayer(context, s),
+      ),
+    ];
+  }
+
+  Future<void> _addPlayer(BuildContext context, AppState s) async {
+    final n = TextEditingController(), p = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Oynatıcı ekle'),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(
+              controller: n,
+              autofocus: true,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(labelText: 'Ad (ör. Benim oynatıcım)')),
+          TextField(
+              controller: p,
+              autocorrect: false,
+              decoration: const InputDecoration(labelText: 'Paket adı (ör. org.videolan.vlc)')),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Ekle')),
+        ],
+      ),
+    );
+    if (ok == true && p.text.trim().isNotEmpty) {
+      s.addCustomPlayer(n.text.trim().isEmpty ? p.text.trim() : n.text.trim(), p.text);
+    }
+    n.dispose();
+    p.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppState>();
@@ -97,6 +167,8 @@ class SettingsScreen extends StatelessWidget {
             ],
           ),
         ),
+        const _Header('Oynatıcı'),
+        ..._players(context, s),
         const _Header('Yetişkin içerik'),
         ListTile(
           leading: Icon(s.adultUnlocked ? Icons.lock_open : Icons.lock_outline),

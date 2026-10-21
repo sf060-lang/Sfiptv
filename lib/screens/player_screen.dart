@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
@@ -13,15 +14,15 @@ import '../xtream_api.dart';
 
 /// Tam ekran oynatıcı (libmpv). Canlı kanallarda önceki/sonraki kanala geçiş,
 /// film/dizilerde kaldığı yerden devam eder.
-class PlayerScreen extends StatefulWidget {
-  const PlayerScreen({super.key, required this.entries, this.index = 0});
+class BuiltInPlayerScreen extends StatefulWidget {
+  const BuiltInPlayerScreen({super.key, required this.entries, this.index = 0});
   final List<PlayEntry> entries;
   final int index;
   @override
-  State<PlayerScreen> createState() => _PlayerScreenState();
+  State<BuiltInPlayerScreen> createState() => _PlayerScreenState();
 }
 
-class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver {
+class _PlayerScreenState extends State<BuiltInPlayerScreen> with WidgetsBindingObserver {
   late final AppState st;
   late final Player player;
   late final VideoController video;
@@ -771,6 +772,102 @@ class _ControlsState extends State<_Controls> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+
+/// Oynatıcı seçimi: Ayarlar'da dış oynatıcı (VLC, MX Player…) seçildiyse onda açar,
+/// yoksa dahili oynatıcıyı kullanır.
+class PlayerScreen extends StatelessWidget {
+  const PlayerScreen({super.key, required this.entries, this.index = 0});
+  final List<PlayEntry> entries;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    final ext = context.read<AppState>().extPlayer;
+    if (Platform.isAndroid && ext.isNotEmpty) {
+      return _ExternalLauncher(entry: entries[index], pkg: ext, entries: entries, index: index);
+    }
+    return BuiltInPlayerScreen(entries: entries, index: index);
+  }
+}
+
+class _ExternalLauncher extends StatefulWidget {
+  const _ExternalLauncher(
+      {required this.entry, required this.pkg, required this.entries, required this.index});
+  final PlayEntry entry;
+  final String pkg;
+  final List<PlayEntry> entries;
+  final int index;
+  @override
+  State<_ExternalLauncher> createState() => _ExternalLauncherState();
+}
+
+class _ExternalLauncherState extends State<_ExternalLauncher> {
+  String? _err;
+  bool _builtIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _go());
+  }
+
+  Future<void> _go() async {
+    final st = context.read<AppState>();
+    final e = widget.entry;
+    final url = st.api!.urlFor(e, st.liveFormat);
+    st.addHistory(e);
+    try {
+      final intent = AndroidIntent(
+        action: 'action_view',
+        data: url,
+        type: 'video/*',
+        package: widget.pkg == 'chooser' ? null : widget.pkg,
+        arguments: {'title': e.title},
+      );
+      if (widget.pkg == 'chooser') {
+        await intent.launchChooser('Oynatıcı seç');
+      } else {
+        await intent.launch();
+      }
+      if (mounted) Navigator.of(context).pop();
+    } catch (err) {
+      if (mounted) {
+        setState(() => _err =
+            'Oynatıcı açılamadı. Uygulama yüklü mü?\n(${widget.pkg})');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_builtIn) {
+      return BuiltInPlayerScreen(entries: widget.entries, index: widget.index);
+    }
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.entry.title, maxLines: 1)),
+      body: Center(
+        child: _err == null
+            ? const Column(mainAxisSize: MainAxisSize.min, children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 12),
+                Text('Seçilen oynatıcıda açılıyor…'),
+              ])
+            : Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(_err!, textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                FilledButton(
+                    autofocus: true,
+                    onPressed: () => setState(() => _builtIn = true),
+                    child: const Text('Dahili oynatıcıyla aç')),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(), child: const Text('Geri')),
+              ]),
       ),
     );
   }

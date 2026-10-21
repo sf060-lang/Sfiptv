@@ -242,7 +242,8 @@ class LiveTile extends StatelessWidget {
     return HoldSelect(
       onTap: onTap,
       onHold: menu,
-      child: ListTile(
+      builder: (node) => ListTile(
+        focusNode: node,
         onTap: onTap,
         onLongPress: menu,
         leading: SizedBox(
@@ -274,10 +275,11 @@ class LiveTile extends StatelessWidget {
 }
 
 /// Kumandada Tamam (Select/Enter) tuşu: kısa basış = aç, 3 sn basılı tutuş = menü.
+/// Tuşu, odaktaki öğenin kendi FocusNode'unda yakalar (ListTile/InkWell'in kendi
+/// kısayolları üst katmandan önce çalıştığı için üst Focus yetmez).
 class HoldSelect extends StatefulWidget {
-  const HoldSelect(
-      {super.key, required this.child, required this.onTap, required this.onHold});
-  final Widget child;
+  const HoldSelect({super.key, required this.builder, required this.onTap, required this.onHold});
+  final Widget Function(FocusNode node) builder;
   final VoidCallback onTap, onHold;
   @override
   State<HoldSelect> createState() => _HoldSelectState();
@@ -286,6 +288,7 @@ class HoldSelect extends StatefulWidget {
 class _HoldSelectState extends State<HoldSelect> {
   Timer? _t;
   bool _down = false, _fired = false;
+  late final FocusNode _node = FocusNode(onKeyEvent: _onKey);
 
   static bool _isSelect(LogicalKeyboardKey k) =>
       k == LogicalKeyboardKey.select ||
@@ -293,37 +296,33 @@ class _HoldSelectState extends State<HoldSelect> {
       k == LogicalKeyboardKey.numpadEnter ||
       k == LogicalKeyboardKey.gameButtonA;
 
+  KeyEventResult _onKey(FocusNode node, KeyEvent e) {
+    if (!_isSelect(e.logicalKey)) return KeyEventResult.ignored;
+    if (e is KeyDownEvent) {
+      _down = true;
+      _fired = false;
+      _t?.cancel();
+      _t = Timer(const Duration(seconds: 3), () {
+        _fired = true;
+        widget.onHold();
+      });
+    } else if (e is KeyUpEvent) {
+      _t?.cancel();
+      if (_down && !_fired) widget.onTap();
+      _down = false;
+    }
+    return KeyEventResult.handled;
+  }
+
   @override
   void dispose() {
     _t?.cancel();
+    _node.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Focus(
-      canRequestFocus: false,
-      skipTraversal: true,
-      onKeyEvent: (node, e) {
-        if (!_isSelect(e.logicalKey)) return KeyEventResult.ignored;
-        if (e is KeyDownEvent) {
-          _down = true;
-          _fired = false;
-          _t?.cancel();
-          _t = Timer(const Duration(seconds: 3), () {
-            _fired = true;
-            widget.onHold();
-          });
-        } else if (e is KeyUpEvent) {
-          _t?.cancel();
-          if (_down && !_fired) widget.onTap();
-          _down = false;
-        }
-        return KeyEventResult.handled;
-      },
-      child: widget.child,
-    );
-  }
+  Widget build(BuildContext context) => widget.builder(_node);
 }
 
 /// Uzun basış menüsü: favoriye ekle/çıkar ve (varsa) taşı.
@@ -407,7 +406,8 @@ class _PosterState extends State<Poster> {
         child: HoldSelect(
          onTap: widget.onTap,
          onHold: () => showItemMenu(context, item),
-         child: InkWell(
+         builder: (node) => InkWell(
+          focusNode: node,
           borderRadius: BorderRadius.circular(10),
           onFocusChange: (v) => setState(() => _focused = v),
           onTap: widget.onTap,

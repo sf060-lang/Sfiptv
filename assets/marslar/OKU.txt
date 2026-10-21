@@ -2,3 +2,5 @@ Takim marslarini buraya mp3 olarak koy; dosya adi takim kodu olmali:
 gs.mp3 fb.mp3 bjk.mp3 ts.mp3 ibfk.mp3 kasim.mp3 eyup.mp3 goz.mp3 sam.mp3 rize.mp3
 konya.mp3 koc.mp3 alan.mp3 gfk.mp3 gb.mp3 erz.mp3 amed.mp3 corum.mp3
 Takim secilince ve uygulama her acildiginda marsin ilk 3 saniyesi calar.
+
+onuncuyil.mp3 : uygulama acilirken ilk 5 saniye calan 10. Yil Marsi
