@@ -94,7 +94,28 @@ class PinDialog extends StatefulWidget {
 class _PinDialogState extends State<PinDialog> {
   final _a = TextEditingController();
   final _b = TextEditingController();
+  final _fa = FocusNode(), _fb = FocusNode();
   String? _err;
+
+  KeyEventResult _vkey(FocusNode n, KeyEvent e) {
+    if (e is! KeyDownEvent) return KeyEventResult.ignored;
+    if (e.logicalKey == LogicalKeyboardKey.arrowDown) {
+      FocusScope.of(context).nextFocus();
+      return KeyEventResult.handled;
+    }
+    if (e.logicalKey == LogicalKeyboardKey.arrowUp) {
+      FocusScope.of(context).previousFocus();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fa.onKeyEvent = _vkey;
+    _fb.onKeyEvent = _vkey;
+  }
 
   void _submit() {
     final s = context.read<AppState>();
@@ -122,6 +143,8 @@ class _PinDialogState extends State<PinDialog> {
   void dispose() {
     _a.dispose();
     _b.dispose();
+    _fa.dispose();
+    _fb.dispose();
     super.dispose();
   }
 
@@ -134,19 +157,26 @@ class _PinDialogState extends State<PinDialog> {
         children: [
           TextField(
             controller: _a,
+            focusNode: _fa,
             autofocus: true,
+            textInputAction: widget.create ? TextInputAction.next : TextInputAction.done,
             obscureText: true,
             keyboardType: TextInputType.number,
             maxLength: 8,
             decoration: InputDecoration(
                 labelText: widget.create ? 'Yeni PIN (en az 4 hane)' : 'PIN'),
             onSubmitted: (_) {
-              if (!widget.create) _submit();
+              if (widget.create) {
+                _fb.requestFocus();
+              } else {
+                _submit();
+              }
             },
           ),
           if (widget.create)
             TextField(
               controller: _b,
+              focusNode: _fb,
               obscureText: true,
               keyboardType: TextInputType.number,
               maxLength: 8,
