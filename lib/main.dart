@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'models.dart';
 import 'screens/home.dart';
 import 'screens/login.dart';
+import 'screens/splash.dart';
+import 'teams.dart';
 import 'store.dart';
 
 Future<void> main() async {
@@ -25,6 +27,8 @@ class IptvApp extends StatefulWidget {
 }
 
 class _IptvAppState extends State<IptvApp> with WidgetsBindingObserver {
+  bool _splash = true;
+
   @override
   void initState() {
     super.initState();
@@ -47,22 +51,25 @@ class _IptvAppState extends State<IptvApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final teamId = context.select<AppState, String>((s) => s.team);
     return MaterialApp(
-      title: 'IPTV Pro',
+      title: 'SF İPTV Player',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF3D5AFE),
-          brightness: Brightness.dark,
-        ),
-      ),
-      home: Selector<AppState, Account?>(
-        selector: (_, s) => s.account,
-        builder: (_, acc, __) => acc == null
-            ? const LoginScreen()
-            : HomeScreen(key: ValueKey(acc.key)),
+      theme: buildTheme(teamById(teamId)),
+      home: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        child: _splash
+            ? SplashScreen(
+                key: const ValueKey('splash'),
+                onDone: () => setState(() => _splash = false),
+              )
+            : Selector<AppState, Account?>(
+                key: const ValueKey('app'),
+                selector: (_, s) => s.account,
+                builder: (_, acc, __) => acc == null
+                    ? const LoginScreen()
+                    : HomeScreen(key: ValueKey(acc.key)),
+              ),
       ),
     );
   }

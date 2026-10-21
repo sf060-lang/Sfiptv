@@ -1,0 +1,15 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+dist/
+pubspec.lock
+*.iml
+.idea/
+# Platform klasorleri her derlemede tool/setup_platforms.sh ile uretilir
+android/
+windows/
+.metadata

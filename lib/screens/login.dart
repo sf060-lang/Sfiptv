@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models.dart';
 import '../store.dart';
+import '../widgets.dart';
 import '../xtream_api.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -52,7 +53,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppState>();
-    return Scaffold(
+    return PopScope(
+      canPop: widget.canClose,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !widget.canClose) confirmExit(context);
+      },
+      child: Scaffold(
       appBar: widget.canClose ? AppBar(title: const Text('Hesaplar')) : null,
       body: SafeArea(
         child: Center(
@@ -66,11 +72,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (!widget.canClose) ...[
                     const Icon(Icons.live_tv_rounded, size: 64),
                     const SizedBox(height: 8),
-                    Text('IPTV Pro',
+                    Text('SF İPTV Player',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headlineMedium),
                     const SizedBox(height: 24),
                   ],
+                  Text('Tuttuğun takım', style: Theme.of(context).textTheme.titleSmall),
+                  const SizedBox(height: 8),
+                  const TeamGrid(),
+                  const SizedBox(height: 20),
                   if (s.accounts.isNotEmpty) ...[
                     Text('Kayıtlı hesaplar', style: Theme.of(context).textTheme.titleSmall),
                     for (var i = 0; i < s.accounts.length; i++)
@@ -152,6 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }

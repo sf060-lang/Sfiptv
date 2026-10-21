@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models.dart';
 import '../store.dart';
+import '../teams.dart';
 import '../widgets.dart';
 import 'login.dart';
 
@@ -36,6 +37,23 @@ class SettingsScreen extends StatelessWidget {
                 .showSnackBar(const SnackBar(content: Text('Listeler bir sonraki açılışta yenilenecek.')));
           },
         ),
+        const _Header('Görünüm'),
+        ListTile(
+          leading: const Icon(Icons.palette_outlined),
+          title: const Text('Tuttuğun takım'),
+          subtitle: Text('${teamById(s.team).name} — uygulama renkleri takımına göre değişir'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => showDialog<void>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Tuttuğun takım'),
+              content: const SingleChildScrollView(child: TeamGrid()),
+              actions: [
+                FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('Bitti')),
+              ],
+            ),
+          ),
+        ),
         const _Header('Oynatıcı'),
         ListTile(
           leading: const Icon(Icons.stream),
@@ -57,6 +75,27 @@ class SettingsScreen extends StatelessWidget {
           subtitle: const Text('4K/8K için açık kalmalı. Görüntü bozuksa kapatıp dene.'),
           value: s.hwAccel,
           onChanged: s.setHwAccel,
+        ),
+        ListTile(
+          leading: const Icon(Icons.speed),
+          title: const Text('Ara bellek'),
+          subtitle: Text('${s.bufPreset.info} — oynatmadan önce ${s.bufPreset.pre} sn biriktirir. '
+              'Sık takılıyorsa yükseltin; kanal geç açılıyorsa düşürün.'),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final b in bufPresets)
+                ChoiceChip(
+                  label: Text(b.label),
+                  selected: s.buf == b.id,
+                  onSelected: (_) => s.setBuf(b.id),
+                ),
+            ],
+          ),
         ),
         const _Header('Yetişkin içerik'),
         ListTile(
@@ -131,7 +170,7 @@ class _Header extends StatelessWidget {
             style: Theme.of(context)
                 .textTheme
                 .titleSmall
-                ?.copyWith(color: Theme.of(context).colorScheme.primary)),
+                ?.copyWith(color: Theme.of(context).colorScheme.secondary)),
       );
 }
 

@@ -21,7 +21,7 @@ class PlayerScreen extends StatefulWidget {
   State<PlayerScreen> createState() => _PlayerScreenState();
 }
 
-class _PlayerScreenState extends State<PlayerScreen> {
+class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver {
   late final AppState st;
   late final Player player;
   late final VideoController video;
@@ -30,6 +30,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
   final cur = ValueNotifier<PlayEntry?>(null);
   final fit = ValueNotifier<BoxFit>(BoxFit.contain);
   final error = ValueNotifier<String?>(null);
+  final gateMsg = ValueNotifier<String?>(null); // "Ara belleğe alınıyor… x / y sn"
+  Timer? _gateT;
 
   int retries = 0;
   bool _disposed = false;
@@ -45,7 +47,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
     st = context.read<AppState>();
     idx = widget.index;
 
-    final bufferMb = isMobile ? 96 : 256;
+    WidgetsBinding.instance.addObserver(this);
+    final bp = st.bufPreset;
+    final bufferMb = isMobile ? bp.mobMb : bp.deskMb;
     player = Player(
       configuration: PlayerConfiguration(bufferSize: bufferMb * 1024 * 1024),
     );
@@ -91,8 +95,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
     await set('tls-verify', 'no');
     await set('network-timeout', '20');
     await set('cache', 'yes');
-    await set('cache-secs', '60');
-    await set('demuxer-max-bytes', isMobile ? '96MiB' : '256MiB');
+    final bp = st.bufPreset;
+    await set('cache-secs', '${bp.secs}');
+    await set('demuxer-readahead-secs', '${bp.secs}');
+    await set('demuxer-max-bytes', '${isMobile ? bp.mobMb : bp.deskMb}MiB');
     await set('demuxer-max-back-bytes', isMobile ? '32MiB' : '64MiB');
     await set('demuxer-lavf-o',
         'reconnect=1,reconnect_streamed=1,reconnect_on_network_error=1,reconnect_delay_max=5');
@@ -106,6 +112,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
     final e = widget.entries[idx];
     cur.value = e;
     if (retries == 0) error.value = null;
+    _gateT?.cancel();
+    gateMsg.value = null;
 
     final url = st.api!.urlFor(e, st.liveFormat);
     final pos = e.type == MediaType.live ? 0 : (st.positions[e.key] ?? 0);
@@ -116,11 +124,49 @@ class _PlayerScreenState extends State<PlayerScreen> {
           httpHeaders: {'User-Agent': XtreamApi.ua},
           start: pos > 10 ? Duration(seconds: pos - 3) : null,
         ),
-        play: true,
+        play: false,
       );
       st.addHistory(e);
+      _gatePlay();
     } catch (err) {
       _onError('$err');
+    }
+  }
+
+  /// Yeterli ara bellek birikene kadar bekler, sonra oynatır (en fazla 30 sn).
+  void _gatePlay() {
+    _gateT?.cancel();
+    final need = st.bufPreset.pre;
+    if (need <= 0) {
+      player.play();
+      return;
+    }
+    final t0 = DateTime.now();
+    _gateT = Timer.periodic(const Duration(milliseconds: 300), (t) {
+      if (_disposed) {
+        t.cancel();
+        return;
+      }
+      final ahead = (player.state.buffer - player.state.position).inMilliseconds / 1000.0;
+      final waited = DateTime.now().difference(t0).inSeconds;
+      if (ahead >= need || waited > 30) {
+        t.cancel();
+        gateMsg.value = null;
+        player.play();
+      } else {
+        final shown = ahead < 0 ? 0.0 : (ahead > need ? need.toDouble() : ahead);
+        gateMsg.value = 'Ara belleğe alınıyor… ${shown.toStringAsFixed(1)} / $need sn';
+      }
+    });
+  }
+
+  /// Uygulama arka plana alınınca (Android) yayın tamamen kapansın.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!isMobile || _disposed) return;
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      player.pause();
+      if (mounted) Navigator.of(context).maybePop();
     }
   }
 
@@ -181,6 +227,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
   @override
   void dispose() {
     _disposed = true;
+    WidgetsBinding.instance.removeObserver(this);
+    _gateT?.cancel();
     _timer?.cancel();
     for (final s in _subs) {
       s.cancel();
@@ -328,6 +376,20 @@ class _ControlsState extends State<_Controls> {
                   builder: (_, s) =>
                       s.data == true ? const CircularProgressIndicator() : const SizedBox.shrink(),
                 ),
+              ),
+              ValueListenableBuilder<String?>(
+                valueListenable: host.gateMsg,
+                builder: (_, m, __) => m == null
+                    ? const SizedBox.shrink()
+                    : Align(
+                        alignment: const Alignment(0, 0.3),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                              color: Colors.black87, borderRadius: BorderRadius.circular(12)),
+                          child: Text(m, style: const TextStyle(color: Colors.white)),
+                        ),
+                      ),
               ),
               ValueListenableBuilder<String?>(
                 valueListenable: host.error,

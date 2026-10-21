@@ -12,6 +12,9 @@ M=android/app/src/main/AndroidManifest.xml
 if ! grep -q 'android.permission.INTERNET' "$M"; then
   sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.WAKE_LOCK"/>\n    <application android:usesCleartextTraffic="true"|' "$M"
 fi
-sed -i 's|android:label="[^"]*"|android:label="IPTV Pro"|' "$M"
+sed -i 's|android:label="[^"]*"|android:label="SF İPTV Player"|' "$M"
+
+# Windows pencere basligi
+sed -i 's/L"iptv_pro"/L"SF IPTV Player"/' windows/runner/main.cpp
 
 echo "Platform ayarlari tamam."

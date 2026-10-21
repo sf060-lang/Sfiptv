@@ -8,6 +8,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'models.dart';
 import 'xtream_api.dart';
 
+/// Ara bellek ön ayarı. pre: oynatmadan önce biriktirilecek sn · secs: mpv ileri okuma sn
+/// · mobMb/deskMb: demuxer arabellek boyutu (MiB).
+class BufPreset {
+  const BufPreset(this.id, this.label, this.info, this.pre, this.secs, this.mobMb, this.deskMb);
+  final String id, label, info;
+  final int pre, secs, mobMb, deskMb;
+}
+
+const bufPresets = <BufPreset>[
+  BufPreset('low', 'Düşük', 'En hızlı açılış, iyi internet için', 1, 20, 32, 64),
+  BufPreset('normal', 'Normal', 'Dengeli', 3, 40, 64, 128),
+  BufPreset('high', 'Yüksek', 'Takılmaya karşı, birkaç sn geç açılır', 8, 90, 96, 256),
+  BufPreset('max', 'Çok yüksek', 'Zayıf/dalgalı internet için, ~15 sn geç açılır', 15, 180, 160, 384),
+];
+
 /// Kategori adından yetişkin içeriği tahmin eden desen.
 final _adultRe = RegExp(
     r'(^|[^a-z0-9])(xxx|adults?|porn\w*|sex\w*|erot\w*|18\+|\+18|yeti[sş]kin|hustler|playboy|brazzers|dorcel|penthouse|hardcore)([^a-z0-9]|$)');
@@ -23,6 +38,8 @@ class AppState extends ChangeNotifier {
   int active = -1;
   String liveFormat = 'ts'; // 'ts' | 'm3u8'
   bool hwAccel = true;
+  String team = ''; // tuttuğu takım (teams.dart)
+  String buf = 'high'; // ara bellek ön ayarı
   String? _pinHash, _pinSalt;
   bool adultUnlocked = false;
 
@@ -58,6 +75,8 @@ class AppState extends ChangeNotifier {
     }
     liveFormat = prefs.getString('liveFormat') ?? 'ts';
     hwAccel = prefs.getBool('hw') ?? true;
+    team = prefs.getString('team') ?? '';
+    buf = prefs.getString('buf') ?? 'high';
     _pinHash = prefs.getString('pinHash');
     _pinSalt = prefs.getString('pinSalt');
     final a = prefs.getInt('active') ?? (accounts.isEmpty ? -1 : 0);
@@ -277,6 +296,21 @@ class AppState extends ChangeNotifier {
   void setLiveFormat(String f) {
     liveFormat = f;
     prefs.setString('liveFormat', f);
+    notifyListeners();
+  }
+
+  BufPreset get bufPreset =>
+      bufPresets.firstWhere((b) => b.id == buf, orElse: () => bufPresets[2]);
+
+  void setTeam(String id) {
+    team = id;
+    prefs.setString('team', id);
+    notifyListeners();
+  }
+
+  void setBuf(String id) {
+    buf = id;
+    prefs.setString('buf', id);
     notifyListeners();
   }
 

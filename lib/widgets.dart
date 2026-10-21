@@ -1,14 +1,73 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'models.dart';
 import 'store.dart';
+import 'teams.dart';
 
 IconData typeIcon(MediaType t) => switch (t) {
       MediaType.live => Icons.live_tv,
       MediaType.movie => Icons.movie,
       MediaType.series => Icons.video_library,
     };
+
+/// Geri tuşunda "çıkılsın mı?" sorar; onaylanırsa uygulamayı kapatır.
+Future<void> confirmExit(BuildContext context) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Uygulamadan çıkılsın mı?'),
+      content: const Text('Çıkarsan açık yayın da kapanır.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hayır, kal')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Evet, çık')),
+      ],
+    ),
+  );
+  if (ok != true) return;
+  if (Platform.isAndroid || Platform.isIOS) {
+    await SystemNavigator.pop();
+  } else {
+    exit(0);
+  }
+}
+
+/// Tuttuğun takımı seçtiren liste; seçince uygulama renkleri anında değişir.
+class TeamGrid extends StatelessWidget {
+  const TeamGrid({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = context.watch<AppState>();
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final t in teams)
+          ChoiceChip(
+            avatar: Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  stops: const [0.5, 0.5],
+                  colors: [t.pri, t.acc],
+                ),
+              ),
+            ),
+            label: Text(t.name),
+            selected: s.team == t.id,
+            onSelected: (_) => s.setTeam(t.id),
+          ),
+      ],
+    );
+  }
+}
 
 /// PIN ile yetişkin içeriğin kilidini açar. İlk kullanımda PIN oluşturtur.
 Future<bool> askUnlock(BuildContext context) async {

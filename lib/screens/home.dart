@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models.dart';
+import '../widgets.dart';
 import 'browse.dart';
 import 'favorites.dart';
 import 'history.dart';
@@ -15,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _i = 0;
   final _visited = <int>{0};
+  final _stack = <int>[0]; // gezilen menüler (geri tuşu için)
 
   static const _dests = [
     (Icons.live_tv_outlined, Icons.live_tv, 'Canlı TV'),
@@ -43,12 +45,33 @@ class _HomeScreenState extends State<HomeScreen> {
           _visited.contains(k) ? _make(k) : const SizedBox.shrink(),
       ],
     );
-    void select(int k) => setState(() {
-          _i = k;
-          _visited.add(k);
-        });
+    void select(int k) {
+      if (k == _i) return;
+      setState(() {
+        _i = k;
+        _visited.add(k);
+        _stack.add(k);
+        if (_stack.length > 50) _stack.removeAt(0);
+      });
+    }
 
-    return LayoutBuilder(builder: (context, c) {
+    void onBack() {
+      if (_stack.length > 1) {
+        setState(() {
+          _stack.removeLast();
+          _i = _stack.last;
+        });
+      } else {
+        confirmExit(context);
+      }
+    }
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) onBack();
+      },
+      child: LayoutBuilder(builder: (context, c) {
       final wide = c.maxWidth >= 700;
       if (wide) {
         return Scaffold(
@@ -88,6 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       );
-    });
+    }),
+    );
   }
 }

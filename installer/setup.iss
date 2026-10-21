@@ -1,7 +1,7 @@
 ; Inno Setup betigi - Windows kurulum dosyasi (IPTVPro-Setup.exe) uretir.
 ; Derleme: iscc installer\setup.iss  (once "flutter build windows --release" calistirilmali)
 
-#define MyAppName "IPTV Pro"
+#define MyAppName "SF IPTV Player"
 #define MyAppVersion "1.0.0"
 #define MyAppExe "iptv_pro.exe"
 #define SrcDir "..\build\windows\x64\runner\Release"
@@ -36,4 +36,4 @@ Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExe}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExe}"; Description: "IPTV Pro'yu başlat"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExe}"; Description: "SF IPTV Player'ı başlat"; Flags: nowait postinstall skipifsilent
