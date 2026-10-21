@@ -264,10 +264,24 @@ class _BrowseScreenState extends State<BrowseScreen> {
           },
         );
       }
+      void move(int i, int to) {
+        final ids = [for (final x in list) x.id];
+        final id = ids.removeAt(i);
+        ids.insert(to, id);
+        s.setOrder(key, ids);
+        s.setSort(key, 'manual'); // taşıyınca özel sıralamaya geç
+      }
+
+      final canMove = query.isEmpty;
       return ListView.builder(
         itemCount: list.length,
         itemExtent: 64,
-        itemBuilder: (_, i) => LiveTile(item: list[i], onTap: () => _open(context, list, i)),
+        itemBuilder: (_, i) => LiveTile(
+          item: list[i],
+          onTap: () => _open(context, list, i),
+          onMoveUp: canMove && i > 0 ? () => move(i, i - 1) : null,
+          onMoveDown: canMove && i < list.length - 1 ? () => move(i, i + 1) : null,
+        ),
       );
     }
 

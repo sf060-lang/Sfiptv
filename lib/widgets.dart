@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -237,52 +238,135 @@ class LiveTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = context.watch<AppState>();
     final fav = s.isFav(item);
-    return ListTile(
+    void menu() => showItemMenu(context, item, onMoveUp: onMoveUp, onMoveDown: onMoveDown);
+    return HoldSelect(
       onTap: onTap,
-      onLongPress: () => s.toggleFav(item),
-      leading: SizedBox(
-        width: 52,
-        height: 40,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: netImage(context, item.icon, Icons.live_tv, fit: BoxFit.contain, cache: 120),
+      onHold: menu,
+      child: ListTile(
+        onTap: onTap,
+        onLongPress: menu,
+        leading: SizedBox(
+          width: 52,
+          height: 40,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: netImage(context, item.icon, Icons.live_tv, fit: BoxFit.contain, cache: 120),
+          ),
         ),
-      ),
-      title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (showFav)
-            IconButton(
-              tooltip: fav ? 'Favorilerden çıkar' : 'Favorilere ekle',
-              icon: Icon(fav ? Icons.star : Icons.star_border,
-                  color: fav ? Colors.amber : null),
-              onPressed: () => s.toggleFav(item),
-            ),
-          if (onMoveUp != null || onMoveDown != null) ...[
-            IconButton(
-              tooltip: 'Yukarı taşı',
-              icon: const Icon(Icons.arrow_upward),
-              onPressed: onMoveUp,
-            ),
-            IconButton(
-              tooltip: 'Aşağı taşı',
-              icon: const Icon(Icons.arrow_downward),
-              onPressed: onMoveDown,
-            ),
-          ],
-          if (dragIndex != null)
-            ReorderableDragStartListener(
-              index: dragIndex!,
-              child: const Padding(
-                padding: EdgeInsets.all(8),
-                child: Icon(Icons.drag_handle),
+        title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (fav) const Icon(Icons.star, color: Colors.amber, size: 20), // yalnızca gösterge
+            if (dragIndex != null)
+              ReorderableDragStartListener(
+                index: dragIndex!,
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(Icons.drag_handle),
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Kumandada Tamam (Select/Enter) tuşu: kısa basış = aç, 3 sn basılı tutuş = menü.
+class HoldSelect extends StatefulWidget {
+  const HoldSelect(
+      {super.key, required this.child, required this.onTap, required this.onHold});
+  final Widget child;
+  final VoidCallback onTap, onHold;
+  @override
+  State<HoldSelect> createState() => _HoldSelectState();
+}
+
+class _HoldSelectState extends State<HoldSelect> {
+  Timer? _t;
+  bool _down = false, _fired = false;
+
+  static bool _isSelect(LogicalKeyboardKey k) =>
+      k == LogicalKeyboardKey.select ||
+      k == LogicalKeyboardKey.enter ||
+      k == LogicalKeyboardKey.numpadEnter ||
+      k == LogicalKeyboardKey.gameButtonA;
+
+  @override
+  void dispose() {
+    _t?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onKeyEvent: (node, e) {
+        if (!_isSelect(e.logicalKey)) return KeyEventResult.ignored;
+        if (e is KeyDownEvent) {
+          _down = true;
+          _fired = false;
+          _t?.cancel();
+          _t = Timer(const Duration(seconds: 3), () {
+            _fired = true;
+            widget.onHold();
+          });
+        } else if (e is KeyUpEvent) {
+          _t?.cancel();
+          if (_down && !_fired) widget.onTap();
+          _down = false;
+        }
+        return KeyEventResult.handled;
+      },
+      child: widget.child,
+    );
+  }
+}
+
+/// Uzun basış menüsü: favoriye ekle/çıkar ve (varsa) taşı.
+Future<void> showItemMenu(BuildContext context, Item item,
+    {VoidCallback? onMoveUp, VoidCallback? onMoveDown}) {
+  final s = context.read<AppState>();
+  final opened = DateTime.now();
+  // Tuş hâlâ basılıyken gelen tekrarlar ilk seçeneği yanlışlıkla tetiklemesin.
+  bool ready() => DateTime.now().difference(opened).inMilliseconds > 900;
+  return showDialog<void>(
+    context: context,
+    builder: (ctx) {
+      Widget opt(IconData icon, String text, VoidCallback f, {bool auto = false}) => ListTile(
+            autofocus: auto,
+            leading: Icon(icon),
+            title: Text(text),
+            onTap: () {
+              if (!ready()) return;
+              Navigator.pop(ctx);
+              f();
+            },
+          );
+      final fav = s.isFav(item);
+      return AlertDialog(
+        title: Text(item.name, maxLines: 2, overflow: TextOverflow.ellipsis),
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        content: SizedBox(
+          width: 360,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              opt(fav ? Icons.star_border : Icons.star,
+                  fav ? 'Favorilerden çıkar' : 'Favorilere ekle', () => s.toggleFav(item),
+                  auto: true),
+              if (onMoveUp != null) opt(Icons.arrow_upward, 'Yukarı taşı', onMoveUp),
+              if (onMoveDown != null) opt(Icons.arrow_downward, 'Aşağı taşı', onMoveDown),
+              opt(Icons.close, 'Vazgeç', () {}),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
 
 /// Film / dizi afişi. Kumandayla gezilirken odaktaki afişin etrafında çerçeve görünür;
@@ -320,11 +404,14 @@ class _PosterState extends State<Poster> {
           borderRadius: BorderRadius.circular(13),
           border: Border.all(color: _focused ? accent : Colors.transparent, width: 3),
         ),
-        child: InkWell(
+        child: HoldSelect(
+         onTap: widget.onTap,
+         onHold: () => showItemMenu(context, item),
+         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onFocusChange: (v) => setState(() => _focused = v),
           onTap: widget.onTap,
-          onLongPress: () => s.toggleFav(item),
+          onLongPress: () => showItemMenu(context, item),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Stack(
@@ -350,23 +437,16 @@ class _PosterState extends State<Poster> {
                         style: const TextStyle(fontSize: 12, color: Colors.white)),
                   ),
                 ),
-                Positioned(
-                  top: 2,
-                  right: 2,
-                  // Yıldız dokunmatik içindir; kumandada gezinmeyi yavaşlatmasın diye odak dışı.
-                  child: ExcludeFocus(
-                    child: IconButton(
-                      visualDensity: VisualDensity.compact,
-                      style: IconButton.styleFrom(backgroundColor: Colors.black45),
-                      icon: Icon(fav ? Icons.star : Icons.star_border,
-                          size: 20, color: fav ? Colors.amber : Colors.white),
-                      onPressed: () => s.toggleFav(item),
-                    ),
+                if (fav)
+                  const Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Icon(Icons.star, size: 20, color: Colors.amber),
                   ),
-                ),
               ],
             ),
           ),
+        ),
         ),
       ),
     );
