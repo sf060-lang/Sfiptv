@@ -14,6 +14,25 @@ if ! grep -q 'android.permission.INTERNET' "$M"; then
 fi
 sed -i 's|android:label="[^"]*"|android:label="SF İPTV Player"|' "$M"
 
+# ---- Google TV / Android TV / Android box destegi ----
+# 1) TV ana ekraninda gorunsun (LEANBACK_LAUNCHER)
+if ! grep -q 'LEANBACK_LAUNCHER' "$M"; then
+  sed -i 's|\(<category android:name="android.intent.category.LAUNCHER"/>\)|\1\n                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>|' "$M"
+fi
+# 2) Dokunmatik ekran sart degil (TV kutularinda yok)
+if ! grep -q 'android.software.leanback' "$M"; then
+  sed -i 's|<application|<uses-feature android:name="android.software.leanback" android:required="false"/>\n    <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>\n    <uses-feature android:name="android.hardware.faketouch" android:required="false"/>\n    <application|' "$M"
+fi
+# 3) TV ana ekrani afisi (banner)
+mkdir -p android/app/src/main/res/drawable-xhdpi
+cp tool/tv_banner.png android/app/src/main/res/drawable-xhdpi/tv_banner.png
+if ! grep -q 'android:banner' "$M"; then
+  sed -i 's|<application|<application android:banner="@drawable/tv_banner"|' "$M"
+fi
+echo "---- AndroidManifest.xml ----"
+cat "$M"
+echo "-----------------------------"
+
 # Windows pencere basligi
 sed -i 's/L"iptv_pro"/L"SF IPTV Player"/' windows/runner/main.cpp
 

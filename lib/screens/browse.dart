@@ -245,12 +245,23 @@ class _BrowseScreenState extends State<BrowseScreen> {
             ids.insert(n, id);
             s.setOrder(key, ids);
           },
-          itemBuilder: (_, i) => LiveTile(
-            key: ValueKey(list[i].id),
-            item: list[i],
-            dragIndex: i,
-            onTap: () => _open(context, list, i),
-          ),
+          itemBuilder: (_, i) {
+            void move(int to) {
+              final ids = [for (final x in list) x.id];
+              final id = ids.removeAt(i);
+              ids.insert(to, id);
+              s.setOrder(key, ids);
+            }
+
+            return LiveTile(
+              key: ValueKey(list[i].id),
+              item: list[i],
+              dragIndex: i,
+              onMoveUp: i > 0 ? () => move(i - 1) : null,
+              onMoveDown: i < list.length - 1 ? () => move(i + 1) : null,
+              onTap: () => _open(context, list, i),
+            );
+          },
         );
       }
       return ListView.builder(

@@ -22,7 +22,7 @@ Future<void> confirmExit(BuildContext context) async {
       title: const Text('Uygulamadan çıkılsın mı?'),
       content: const Text('Çıkarsan açık yayın da kapanır.'),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hayır, kal')),
+        TextButton(autofocus: true, onPressed: () => Navigator.pop(ctx, false), child: const Text('Hayır, kal')),
         FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Evet, çık')),
       ],
     ),
@@ -189,11 +189,14 @@ class LiveTile extends StatelessWidget {
     required this.item,
     required this.onTap,
     this.dragIndex,
+    this.onMoveUp,
+    this.onMoveDown,
     this.showFav = true,
   });
   final Item item;
   final VoidCallback onTap;
   final int? dragIndex;
+  final VoidCallback? onMoveUp, onMoveDown; // kumanda/klavye ile sıralama
   final bool showFav;
 
   @override
@@ -222,6 +225,18 @@ class LiveTile extends StatelessWidget {
                   color: fav ? Colors.amber : null),
               onPressed: () => s.toggleFav(item),
             ),
+          if (onMoveUp != null || onMoveDown != null) ...[
+            IconButton(
+              tooltip: 'Yukarı taşı',
+              icon: const Icon(Icons.arrow_upward),
+              onPressed: onMoveUp,
+            ),
+            IconButton(
+              tooltip: 'Aşağı taşı',
+              icon: const Icon(Icons.arrow_downward),
+              onPressed: onMoveDown,
+            ),
+          ],
           if (dragIndex != null)
             ReorderableDragStartListener(
               index: dragIndex!,
@@ -236,57 +251,88 @@ class LiveTile extends StatelessWidget {
   }
 }
 
-/// Film / dizi afişi.
-class Poster extends StatelessWidget {
+/// Film / dizi afişi. Kumandayla gezilirken odaktaki afişin etrafında çerçeve görünür;
+/// Menü tuşu favoriye ekler/çıkarır.
+class Poster extends StatefulWidget {
   const Poster({super.key, required this.item, required this.onTap});
   final Item item;
   final VoidCallback onTap;
+  @override
+  State<Poster> createState() => _PosterState();
+}
+
+class _PosterState extends State<Poster> {
+  bool _focused = false;
 
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppState>();
+    final item = widget.item;
     final fav = s.isFav(item);
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: onTap,
-      onLongPress: () => s.toggleFav(item),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            netImage(context, item.icon, typeIcon(item.type)),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(8, 18, 8, 8),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black87],
+    final accent = Theme.of(context).colorScheme.secondary;
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onKeyEvent: (node, e) {
+        if (e is KeyDownEvent && e.logicalKey == LogicalKeyboardKey.contextMenu) {
+          s.toggleFav(item);
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: _focused ? accent : Colors.transparent, width: 3),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onFocusChange: (v) => setState(() => _focused = v),
+          onTap: widget.onTap,
+          onLongPress: () => s.toggleFav(item),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                netImage(context, item.icon, typeIcon(item.type)),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(8, 18, 8, 8),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.black87],
+                      ),
+                    ),
+                    child: Text(item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12, color: Colors.white)),
                   ),
                 ),
-                child: Text(item.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: Colors.white)),
-              ),
+                Positioned(
+                  top: 2,
+                  right: 2,
+                  // Yıldız dokunmatik içindir; kumandada gezinmeyi yavaşlatmasın diye odak dışı.
+                  child: ExcludeFocus(
+                    child: IconButton(
+                      visualDensity: VisualDensity.compact,
+                      style: IconButton.styleFrom(backgroundColor: Colors.black45),
+                      icon: Icon(fav ? Icons.star : Icons.star_border,
+                          size: 20, color: fav ? Colors.amber : Colors.white),
+                      onPressed: () => s.toggleFav(item),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Positioned(
-              top: 2,
-              right: 2,
-              child: IconButton(
-                visualDensity: VisualDensity.compact,
-                style: IconButton.styleFrom(backgroundColor: Colors.black45),
-                icon: Icon(fav ? Icons.star : Icons.star_border,
-                    size: 20, color: fav ? Colors.amber : Colors.white),
-                onPressed: () => s.toggleFav(item),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

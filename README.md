@@ -1,4 +1,4 @@
-# IPTV Pro
+# SF İPTV Player
 
 Android ve Windows için Xtream Codes uyumlu IPTV oynatıcı. Tek kod tabanı (Flutter), oynatma motoru libmpv (media_kit).
 
@@ -14,6 +14,18 @@ Android ve Windows için Xtream Codes uyumlu IPTV oynatıcı. Tek kod tabanı (F
 - **İzleme geçmişi** + film/dizide **kaldığı yerden devam**
 - **Yetişkin kilidi**: yetişkin kategoriler varsayılan olarak gizli; PIN (SHA-256 + tuz ile saklanır) ile açılır; uygulama arka plana alınınca otomatik kilitlenir; hangi kategorilerin yetişkin sayılacağını sen seçebilirsin. Kilitli kategoriler arama, favori ve geçmişte de görünmez.
 - Ses / altyazı parçası seçimi, en-boy oranı, tam ekran
+
+
+## Google TV / Android TV / Android box
+
+APK aynı dosyadır; telefon, tablet, Google TV, Android TV ve Android box'larda çalışır.
+
+- **Kurulum:** Kutularda (özellikle 32-bit işletim sistemli olanlarda) tüm işlemcileri içeren `app-release.apk` dosyasını kullan. TV'ye göndermenin yolları: USB bellek (Dosya yöneticisiyle aç), TV'ye kurulu **Downloader** uygulaması, **Send Files to TV**, veya bilgisayardan `adb install app-release.apk`.
+  İlk kurulumda TV: Ayarlar → Güvenlik/Gizlilik → "Bilinmeyen kaynaklar"dan ilgili uygulamaya izin ver.
+- **Ana ekran:** Uygulama TV başlatıcısında "SF İPTV Player" afişiyle görünür.
+- **Kumanda:** Yön tuşları gezinir, **Tamam** açar. Oynatıcıda ↑/↓ veya CH+/CH− kanal değiştirir, ←/→ ±10 sn (film/dizi), **Tamam** oynat/duraklat, medya tuşları çalışır, **Menü** (varsa) favoriler. Geri tuşu bir önceki menüye döner.
+- **Sıralama:** "Özel sıralama"da her kanalın yanında ▲ ▼ düğmeleri vardır (kumandayla kullanılabilir).
+- **Not:** TV'de metin yazmak (hesap girişi, arama) kumandayla yavaştır; hesabı bir kez girmen yeterli.
 
 ## Kurulum dosyalarını almak (bilgisayarına hiçbir şey kurmadan)
 

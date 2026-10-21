@@ -54,6 +54,8 @@ ThemeData buildTheme(Team t) {
     useMaterial3: true,
     colorScheme: cs,
     scaffoldBackgroundColor: bg,
+    focusColor: t.acc.withAlpha(90),
+    hoverColor: t.acc.withAlpha(40),
     appBarTheme: AppBarTheme(backgroundColor: bg),
     navigationBarTheme: NavigationBarThemeData(backgroundColor: bg2, indicatorColor: bg3),
     navigationRailTheme: NavigationRailThemeData(backgroundColor: bg2, indicatorColor: bg3),

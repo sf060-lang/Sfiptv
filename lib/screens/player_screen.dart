@@ -316,16 +316,41 @@ class _ControlsState extends State<_Controls> {
   KeyEventResult _onKey(FocusNode n, KeyEvent e) {
     if (e is! KeyDownEvent) return KeyEventResult.ignored;
     final k = e.logicalKey;
+    final wasVisible = _visible;
     _show();
     if (k == LogicalKeyboardKey.space || k == LogicalKeyboardKey.mediaPlayPause) {
       p.playOrPause();
-    } else if (k == LogicalKeyboardKey.arrowUp || k == LogicalKeyboardKey.pageUp) {
+    } else if (k == LogicalKeyboardKey.select ||
+        k == LogicalKeyboardKey.enter ||
+        k == LogicalKeyboardKey.numpadEnter ||
+        k == LogicalKeyboardKey.gameButtonA) {
+      // Kumandada Tamam: kontroller gizliyse göster, açıksa oynat/duraklat.
+      if (wasVisible) p.playOrPause();
+    } else if (k == LogicalKeyboardKey.contextMenu || k == LogicalKeyboardKey.keyS) {
+      final pe = host.cur.value;
+      if (pe != null && pe.type != MediaType.series) {
+        host.st.toggleFavEntry(pe);
+        final on = host.st.isFavEntry(pe);
+        ScaffoldMessenger.maybeOf(context)
+            ?.showSnackBar(SnackBar(content: Text(on ? 'Favorilere eklendi' : 'Favorilerden çıkarıldı')));
+      }
+    } else if (k == LogicalKeyboardKey.mediaPlay) {
+      p.play();
+    } else if (k == LogicalKeyboardKey.mediaPause) {
+      p.pause();
+    } else if (k == LogicalKeyboardKey.arrowUp ||
+        k == LogicalKeyboardKey.pageUp ||
+        k == LogicalKeyboardKey.channelUp ||
+        k == LogicalKeyboardKey.mediaTrackPrevious) {
       host.go(-1);
-    } else if (k == LogicalKeyboardKey.arrowDown || k == LogicalKeyboardKey.pageDown) {
+    } else if (k == LogicalKeyboardKey.arrowDown ||
+        k == LogicalKeyboardKey.pageDown ||
+        k == LogicalKeyboardKey.channelDown ||
+        k == LogicalKeyboardKey.mediaTrackNext) {
       host.go(1);
-    } else if (k == LogicalKeyboardKey.arrowLeft) {
+    } else if (k == LogicalKeyboardKey.arrowLeft || k == LogicalKeyboardKey.mediaRewind) {
       if (!_live) _seekBy(-10);
-    } else if (k == LogicalKeyboardKey.arrowRight) {
+    } else if (k == LogicalKeyboardKey.arrowRight || k == LogicalKeyboardKey.mediaFastForward) {
       if (!_live) _seekBy(10);
     } else if (k == LogicalKeyboardKey.keyF || k == LogicalKeyboardKey.f11) {
       if (!host.isMobile) toggleFullscreen(context);
