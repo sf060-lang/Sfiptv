@@ -23,6 +23,10 @@ fi
 if ! grep -q 'android.software.leanback' "$M"; then
   sed -i 's|<application|<uses-feature android:name="android.software.leanback" android:required="false"/>\n    <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>\n    <uses-feature android:name="android.hardware.faketouch" android:required="false"/>\n    <application|' "$M"
 fi
+# 2b) Impeller'i kapat (bazi TV ekran kartlarinda beyaz ekran yapiyor), eski Skia kullan
+if ! grep -q 'EnableImpeller' "$M"; then
+  sed -i 's|</application>|    <meta-data android:name="io.flutter.embedding.android.EnableImpeller" android:value="false"/>\n    </application>|' "$M"
+fi
 # 3) TV ana ekrani afisi (banner)
 mkdir -p android/app/src/main/res/drawable-xhdpi
 cp tool/tv_banner.png android/app/src/main/res/drawable-xhdpi/tv_banner.png

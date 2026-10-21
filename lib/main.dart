@@ -12,12 +12,35 @@ import 'store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  MediaKit.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
+  // Hata olursa beyaz ekranda kalmak yerine hatayı ekranda göster.
+  ErrorWidget.builder = (d) => Material(
+        color: const Color(0xFF200000),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            child: Text('Hata: ${d.exceptionAsString()}',
+                style: const TextStyle(color: Colors.white, fontSize: 18)),
+          ),
+        ),
+      );
+  String? initError;
+  try {
+    MediaKit.ensureInitialized();
+  } catch (e) {
+    initError = 'Oynatıcı başlatılamadı: $e';
+  }
+  SharedPreferences prefs;
+  try {
+    prefs = await SharedPreferences.getInstance();
+  } catch (e) {
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+  }
   runApp(ChangeNotifierProvider(
     create: (_) => AppState(prefs),
     child: const IptvApp(),
   ));
+  if (initError != null) debugPrint(initError);
 }
 
 class IptvApp extends StatefulWidget {
