@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models.dart';
 import '../widgets.dart';
+import 'accounts.dart';
 import 'browse.dart';
 import 'favorites.dart';
 import 'history.dart';
@@ -24,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
     (Icons.video_library_outlined, Icons.video_library, 'Diziler'),
     (Icons.star_border, Icons.star, 'Favoriler'),
     (Icons.history, Icons.history, 'Geçmiş'),
+    (Icons.dns_outlined, Icons.dns, 'Abonelikler'),
     (Icons.settings_outlined, Icons.settings, 'Ayarlar'),
   ];
 
@@ -33,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
         2 => const BrowseScreen(key: ValueKey('series'), type: MediaType.series),
         3 => const FavoritesScreen(),
         4 => const HistoryScreen(),
+        5 => const AccountsScreen(),
         _ => const SettingsScreen(),
       };
 
