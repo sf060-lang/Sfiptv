@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../models.dart';
+import '../pets.dart';
 import '../store.dart';
 import '../widgets.dart';
 import '../xtream_api.dart';
@@ -168,10 +169,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: Theme.of(context).textTheme.headlineMedium),
                     const SizedBox(height: 24),
                   ],
-                  Text('Tuttuğun takım', style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 8),
-                  const TeamGrid(),
-                  const SizedBox(height: 20),
+                  const PetsAnimation(),
+                  const SizedBox(height: 12),
                   if (s.accounts.isNotEmpty) ...[
                     Text('Kayıtlı hesaplar', style: Theme.of(context).textTheme.titleSmall),
                     for (var i = 0; i < s.accounts.length; i++)
