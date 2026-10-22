@@ -1,2 +1,1 @@
-Takim marslari: <takim kodu>.mp3 (5 sn). Takim secilince ve uygulama acilirken calar.
-Takim secilmediyse sessiz kalir. Marslar ozgun, sozsuz kisa melodilerdir.
+Acilis muzigi: acilis.mp3 (uygulama acilirken ilk 10 sn calar)

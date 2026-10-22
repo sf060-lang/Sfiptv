@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 
 /// Marş çalar. Dosyalar: assets/marslar/<ad>.mp3
-///  <takım kodu>.mp3 : takım seçilince ve uygulama açılırken 5 sn
+///  acilis.mp3 : uygulama açılırken 10 sn
 class March {
   static Player? _p;
   static int _gen = 0;
@@ -38,15 +38,14 @@ class March {
     }
   }
 
-  /// Takım seçilince: takımın marşından 5 sn. Takım yoksa sessiz.
-  static Future<void> play(String teamId) async {
-    final gen = ++_gen;
-    await stop(keepGen: true);
-    await _playOne(teamId, 5, gen);
-  }
+  /// Takım seçilince ses çalmaz (yalnızca açılış müziği vardır).
+  static Future<void> play(String teamId) async {}
 
-  /// Uygulama açılışı: kayıtlı takımın marşı 5 sn. Takım seçilmediyse sessiz.
-  static Future<void> launch(String teamId) => play(teamId);
+  /// Uygulama açılışı: assets/marslar/acilis.mp3 dosyasının ilk 10 sn'si.
+  static Future<void> launch(String teamId) async {
+    final gen = ++_gen;
+    await _playOne('acilis', 10, gen);
+  }
 
   static Future<void> stop({bool keepGen = false}) async {
     if (!keepGen) _gen++;
