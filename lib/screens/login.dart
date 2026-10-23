@@ -169,7 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: Theme.of(context).textTheme.headlineMedium),
                     const SizedBox(height: 24),
                   ],
-                  const PetsAnimation(),
+                  const PetsAnimation(height: 200),
                   const SizedBox(height: 12),
                   if (s.accounts.isNotEmpty) ...[
                     Text('Kayıtlı hesaplar', style: Theme.of(context).textTheme.titleSmall),
