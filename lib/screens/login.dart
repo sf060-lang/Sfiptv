@@ -150,27 +150,22 @@ class _LoginScreenState extends State<LoginScreen> {
       },
       child: Scaffold(
       appBar: widget.canClose ? AppBar(title: const Text('Hesaplar')) : null,
-      body: SafeArea(
-        child: Center(
-          child: FocusTraversalGroup(
-           policy: ReadingOrderTraversalPolicy(),
-           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (!widget.canClose) ...[
-                    const Icon(Icons.live_tv_rounded, size: 64),
-                    const SizedBox(height: 8),
-                    Text('SF İPTV Player',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineMedium),
-                    const SizedBox(height: 24),
-                  ],
-                  const PetsAnimation(),
-                  const SizedBox(height: 12),
+      body: FocusTraversalGroup(
+        policy: ReadingOrderTraversalPolicy(),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              if (!widget.canClose) const PetsAnimation(),
+              SafeArea(
+                top: false,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 460),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                   if (s.accounts.isNotEmpty) ...[
                     Text('Kayıtlı hesaplar', style: Theme.of(context).textTheme.titleSmall),
                     for (var i = 0; i < s.accounts.length; i++)
@@ -265,10 +260,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         : const Icon(Icons.login),
                     label: const Text('Bağlan ve kaydet'),
                   ),
-                ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
+            ],
           ),
         ),
       ),

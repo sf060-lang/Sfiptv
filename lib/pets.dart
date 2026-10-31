@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// Açılış sayfasındaki sevimli yavru kedi fotoğrafı (yumuşak çerçeve, hafif nefes alma hareketi).
+/// Açılış sayfasında üst ekranı tamamen kaplayan sevimli yavru kedi fotoğrafı
+/// (uçtan uca, hafif nefes alma hareketi, altta yumuşak geçiş ve uygulama adı).
 class PetsAnimation extends StatefulWidget {
-  const PetsAnimation({super.key, this.height = 280});
-  final double height;
+  const PetsAnimation({super.key});
   @override
   State<PetsAnimation> createState() => _PetsAnimationState();
 }
 
 class _PetsAnimationState extends State<PetsAnimation> with SingleTickerProviderStateMixin {
   late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(seconds: 7))
+      AnimationController(vsync: this, duration: const Duration(seconds: 8))
         ..repeat(reverse: true);
 
   @override
@@ -21,49 +21,55 @@ class _PetsAnimationState extends State<PetsAnimation> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    final accent = Theme.of(context).colorScheme.primary;
+    final mq = MediaQuery.of(context);
     final bg = Theme.of(context).scaffoldBackgroundColor;
-    return Center(
-      child: Container(
-        height: widget.height,
-        width: widget.height * 0.78,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(color: accent.withAlpha(110), blurRadius: 36, spreadRadius: 2),
+    final h = (mq.size.height * 0.5).clamp(260.0, 520.0);
+    return SizedBox(
+      width: double.infinity,
+      height: h,
+      child: ClipRect(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            AnimatedBuilder(
+              animation: _c,
+              builder: (_, child) => Transform.scale(
+                scale: 1.08 + 0.06 * Curves.easeInOut.transform(_c.value),
+                child: child,
+              ),
+              child: Image.asset(
+                'assets/images/kedi.jpg',
+                fit: BoxFit.cover,
+                alignment: const Alignment(0, -0.25),
+                filterQuality: FilterQuality.high,
+              ),
+            ),
+            // altta uygulama rengine yumuşak geçiş
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.5, 1.0],
+                  colors: [Colors.black.withAlpha(60), Colors.transparent, bg],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 14,
+              child: Text(
+                'SF İPTV Player',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  shadows: const [Shadow(blurRadius: 14, color: Colors.black87)],
+                ),
+              ),
+            ),
           ],
-          border: Border.all(color: Colors.white.withAlpha(40), width: 1.5),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(26),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              AnimatedBuilder(
-                animation: _c,
-                builder: (_, child) => Transform.scale(
-                  scale: 1.0 + 0.05 * Curves.easeInOut.transform(_c.value),
-                  child: child,
-                ),
-                child: Image.asset(
-                  'assets/images/kedi.jpg',
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
-                  filterQuality: FilterQuality.high,
-                ),
-              ),
-              // alt kenarda yumuşak geçiş
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.center,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, bg.withAlpha(150)],
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
