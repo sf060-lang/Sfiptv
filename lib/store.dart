@@ -37,7 +37,7 @@ class AppState extends ChangeNotifier {
   List<Account> accounts = [];
   int active = -1;
   String liveFormat = 'ts'; // 'ts' | 'm3u8'
-  bool hwAccel = true;
+  bool hwAccel = false;
   String team = ''; // tuttuğu takım (teams.dart)
   String buf = 'high'; // ara bellek ön ayarı
   String? _pinHash, _pinSalt;
@@ -74,7 +74,7 @@ class AppState extends ChangeNotifier {
       accounts = [for (final e in raw) Account.fromJson(Map<String, dynamic>.from(e))];
     }
     liveFormat = prefs.getString('liveFormat') ?? 'ts';
-    hwAccel = prefs.getBool('hw') ?? true;
+    hwAccel = prefs.getBool('hw') ?? false;
     team = prefs.getString('team') ?? '';
     buf = prefs.getString('buf') ?? 'high';
     _pinHash = prefs.getString('pinHash');

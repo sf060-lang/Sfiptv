@@ -285,14 +285,25 @@ class _ControlsState extends State<_Controls> {
   Player get p => host.player;
   bool get _live => host.cur.value?.type == MediaType.live;
 
+  StreamSubscription<bool>? _playSub;
+
   @override
   void initState() {
     super.initState();
     _arm();
+    // Yükleme bitip yayın başlayınca kontrol paneli (play simgesi dahil) kendiliğinden kapansın.
+    _playSub = p.stream.playing.listen((pl) {
+      if (!mounted || !pl) return;
+      _hide?.cancel();
+      _hide = Timer(const Duration(seconds: 2), () {
+        if (mounted && p.state.playing) setState(() => _visible = false);
+      });
+    });
   }
 
   @override
   void dispose() {
+    _playSub?.cancel();
     _hide?.cancel();
     _focus.dispose();
     super.dispose();

@@ -13,3 +13,5 @@ pubspec.lock
 android/
 windows/
 .metadata
+ios/
+macos/

@@ -65,9 +65,56 @@ jobs:
           name: IPTVPro-Windows
           path: dist/*
 
+  macos:
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Platform dosyalarini olustur
+        run: bash tool/setup_apple.sh
+      - run: flutter pub get
+      - run: flutter build macos --release
+      - name: ZIP (macOS uygulamasi)
+        run: |
+          mkdir -p dist
+          app=$(ls -d build/macos/Build/Products/Release/*.app | head -1)
+          ditto -c -k --sequesterRsrc --keepParent "$app" dist/IPTVPro-macOS.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPTVPro-macOS
+          path: dist/*
+
+  ios:
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Platform dosyalarini olustur
+        run: bash tool/setup_apple.sh
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign
+      - name: IPA (imzasiz)
+        run: |
+          mkdir -p dist Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qr dist/IPTVPro-iOS-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPTVPro-iOS
+          path: dist/*
+
   release:
     # Derlemeler bitince APK ve EXE dosyalarini "Releases" sayfasina koyar (dogrudan indirilebilir)
-    needs: [android, windows]
+    needs: [android, windows, macos, ios]
+    if: ${{ !cancelled() && needs.android.result == 'success' && needs.windows.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -85,6 +132,8 @@ jobs:
           done
           cp artifacts/IPTVPro-Windows/IPTVPro-Setup.exe release/SF-IPTV-Player-Windows-Setup.exe
           cp artifacts/IPTVPro-Windows/IPTVPro-Windows-portable.zip release/SF-IPTV-Player-Windows-portable.zip
+          [ -f artifacts/IPTVPro-macOS/IPTVPro-macOS.zip ] && cp artifacts/IPTVPro-macOS/IPTVPro-macOS.zip release/SF-IPTV-Player-macOS.zip || true
+          [ -f artifacts/IPTVPro-iOS/IPTVPro-iOS-unsigned.ipa ] && cp artifacts/IPTVPro-iOS/IPTVPro-iOS-unsigned.ipa release/SF-IPTV-Player-iOS-unsigned.ipa || true
           ls -la release
       - uses: softprops/action-gh-release@v2
         with:
@@ -92,5 +141,6 @@ jobs:
           name: SF İPTV Player v1.0.${{ github.run_number }}
           body: |
             **Android / Google TV / Android box:** `SF-IPTV-Player-universal.apk` (her cihazda çalışır). Telefon ve yeni kutular için `arm64-v8a` daha küçüktür; eski/32-bit kutular için `armeabi-v7a`.
+            **iPhone / iPad (iOS 13+):** `SF-IPTV-Player-iOS-unsigned.ipa` imzasızdır; AltStore veya Sideloadly ile kendi Apple ID'nle kurulur. **Mac (MacBook, iMac):** `SF-IPTV-Player-macOS.zip` (Intel ve Apple Silicon).
             **Windows:** `SF-IPTV-Player-Windows-Setup.exe` (kurulum) veya `SF-IPTV-Player-Windows-portable.zip` (kurulumsuz).
           files: release/*
