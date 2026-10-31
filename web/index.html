@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1220">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SF İPTV">
+<title>SF İPTV Player</title>
+<style>
+:root{--pri:#5c7cff;--acc:#8fa6ff;--onpri:#fff;
+--bg:color-mix(in srgb,var(--pri) 8%,#0b0d16);--bg2:color-mix(in srgb,var(--pri) 13%,#11152a);--bg3:color-mix(in srgb,var(--pri) 21%,#1a1f36);
+--fg:#e8eaf6;--mut:#9aa3c7;--ok:#38d39f;--warn:#ffb74d;--err:#ff6b6b;--r:12px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select{font:inherit;color:inherit}
+button{background:var(--bg3);border:0;border-radius:10px;padding:9px 14px;cursor:pointer}
+button:hover{filter:brightness(1.15)}
+button.pri{background:var(--pri);color:var(--onpri)}
+button.ghost{background:transparent}
+button:disabled{opacity:.5;cursor:default}
+input,select{background:var(--bg2);border:1px solid var(--bg3);border-radius:10px;padding:10px 12px;width:100%;outline:none}
+input:focus,select:focus{border-color:var(--acc)}
+select{width:auto;max-width:100%}
+#app{display:flex;flex-direction:column;height:100%}
+#view{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}
+nav{display:flex;background:var(--bg2);border-top:1px solid var(--bg3);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:transparent;border-radius:0;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--mut)}
+nav button .i{font-size:20px;line-height:1}
+nav button.on{color:#fff;background:var(--bg3);box-shadow:inset 0 3px 0 var(--acc)}
+@media(min-width:760px){nav{order:-1;border-top:0;border-bottom:1px solid var(--bg3)}nav button{flex-direction:row;justify-content:center;gap:8px;font-size:14px;padding:12px}}
+.bar{display:flex;gap:8px;align-items:center;padding:10px 12px;position:sticky;top:0;background:var(--bg);z-index:5;flex-wrap:wrap}
+.bar .grow{flex:1;min-width:140px}
+.list{padding:0 8px 24px}
+.row{display:flex;align-items:center;gap:12px;padding:8px 8px;border-radius:10px;cursor:pointer}
+.row:hover{background:var(--bg2)}
+.logo{width:52px;height:40px;border-radius:6px;background:var(--bg3);object-fit:contain;flex:none}
+.row .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s{color:var(--mut);font-size:12px}
+.ib{padding:6px 9px;background:transparent;font-size:18px;line-height:1}
+.fav{color:var(--warn)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:0 12px 24px}
+.card{position:relative;aspect-ratio:2/3;border-radius:10px;overflow:hidden;background:var(--bg3);cursor:pointer}
+.card img{width:100%;height:100%;object-fit:cover;display:block}
+.card .n{position:absolute;left:0;right:0;bottom:0;padding:22px 8px 8px;font-size:12px;background:linear-gradient(transparent,rgba(0,0,0,.85))}
+.card .st{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.5);border-radius:8px}
+.empty,.msg{padding:40px 20px;text-align:center;color:var(--mut)}
+.spin{width:34px;height:34px;border:4px solid var(--bg3);border-top-color:var(--acc);border-radius:50%;animation:r 1s linear infinite;margin:0 auto 12px}
+@keyframes r{to{transform:rotate(360deg)}}
+.hero{display:block;width:100%;height:46vh;max-height:430px;min-height:220px;object-fit:cover;object-position:50% 30%;-webkit-mask-image:linear-gradient(#000 62%,transparent);mask-image:linear-gradient(#000 62%,transparent)}
+.login{max-width:440px;margin:0 auto;padding:28px 20px;display:flex;flex-direction:column;gap:12px}
+.login h1{text-align:center;margin:8px 0 0}
+.acc{display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:var(--r);padding:12px;cursor:pointer}
+.acc.on{outline:2px solid var(--acc)}
+.sec{padding:18px 16px 6px;color:var(--acc);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.set{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bg2)}
+.set .t{flex:1}.set .s{color:var(--mut);font-size:12.5px}
+.seg{display:flex;background:var(--bg2);border-radius:10px;overflow:hidden}
+.seg button{border-radius:0;background:transparent}.seg button.on{background:var(--pri);color:var(--onpri)}
+.tabs{display:flex;gap:6px;padding:10px 12px;overflow:auto}
+.chip{padding:7px 14px;border-radius:20px;background:var(--bg2);white-space:nowrap}.chip.on{background:var(--pri);color:var(--onpri)}
+.more{display:block;margin:12px auto}
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.team{display:flex;align-items:center;gap:8px;text-align:left;padding:9px 10px;border:2px solid transparent;font-size:14px}
+.team i{width:22px;height:22px;border-radius:50%;flex:none;border:1px solid rgba(255,255,255,.25)}
+.team.on{border-color:var(--acc);background:var(--bg3)}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:10px 16px;border-radius:20px;z-index:80;font-size:14px;display:none;max-width:90%;text-align:center}
+#toast.show{display:block}
+/* açılış ekranı */
+#splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px;overflow:hidden;
+ background:radial-gradient(circle at 50% 38%,color-mix(in srgb,var(--pri) 42%,#0b0d16),#05060c 72%);transition:opacity .5s ease}
+#splash.out{opacity:0;pointer-events:none}
+#splash::before,#splash::after{content:"";position:absolute;left:50%;top:38%;width:40vmin;height:40vmin;margin:-20vmin 0 0 -20vmin;border-radius:50%;border:2px solid var(--acc);opacity:0;animation:ring 3s ease-out infinite}
+#splash::after{animation-delay:1.2s}
+@keyframes ring{0%{transform:scale(.3);opacity:.7}100%{transform:scale(2.6);opacity:0}}
+.sp-title{position:relative;font-size:clamp(16px,calc((100vw - 48px) / 11.5),68px);font-weight:900;letter-spacing:.04em;display:flex;flex-wrap:nowrap;white-space:nowrap;justify-content:center;line-height:1.1;max-width:100%}
+.sp-title span{display:inline-block;min-width:.26em;opacity:0;transform:translateY(-50px) scale(.5) rotate(-12deg);
+ background:linear-gradient(90deg,#fff 0%,var(--acc) 50%,#fff 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 0 14px color-mix(in srgb,var(--acc) 55%,transparent));
+ animation:drop .7s cubic-bezier(.2,1.5,.4,1) forwards,shine 2.4s linear infinite;animation-delay:calc(var(--i)*65ms),0s}
+@keyframes drop{to{opacity:1;transform:none}}
+@keyframes shine{to{background-position:-220% 0}}
+.sp-sub{position:relative;font-size:clamp(20px,5.5vw,34px);font-weight:300;letter-spacing:.3em;opacity:0;transform:translateY(24px);animation:rise .8s ease 1.3s forwards}
+.sp-motto{position:relative;font-size:clamp(15px,4vw,22px);color:var(--acc);opacity:0;letter-spacing:.35em;animation:motto 1.1s ease 1.9s forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+@keyframes motto{0%{opacity:0;letter-spacing:.35em}100%{opacity:1;letter-spacing:.06em}}
+.sp-paws{position:absolute;left:0;right:0;bottom:7%;height:90px;pointer-events:none}
+.sp-paw{position:absolute;width:clamp(20px,6vw,34px);aspect-ratio:1;fill:var(--acc);opacity:0;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--acc) 50%,transparent));
+ animation:pawstep 4.8s ease-in-out infinite;animation-delay:calc(var(--i)*.38s)}
+@keyframes pawstep{0%{opacity:0;transform:rotate(var(--r)) scale(.4)}7%{opacity:.95;transform:rotate(var(--r)) scale(1.12)}12%{transform:rotate(var(--r)) scale(1)}68%{opacity:.85;transform:rotate(var(--r)) scale(1)}88%,100%{opacity:0;transform:rotate(var(--r)) scale(1)}}
+@media(prefers-reduced-motion:reduce){#splash::before,#splash::after{display:none}.sp-paw{animation:none;opacity:.8}}
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+#modal.show{display:flex}
+.dlg{background:var(--bg2);border-radius:16px;padding:18px;width:100%;max-width:420px;max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.dlg.big{max-width:720px}
+.dlg h3{margin:0}
+.dlg .acts{display:flex;gap:8px;justify-content:flex-end}
+.err{color:var(--err);font-size:13px}
+.ep{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer}.ep:hover{background:var(--bg3)}
+/* player */
+#player{position:fixed;inset:0;background:#000;z-index:40;display:none}
+#player.show{display:block}
+#player video{width:100%;height:100%;background:#000}
+#player.cover video{object-fit:cover}#player.fill video{object-fit:fill}
+.ctl{position:absolute;left:0;right:0;display:flex;align-items:center;gap:6px;padding:10px;transition:opacity .25s;color:#fff}
+.ctl.top{top:0;background:linear-gradient(rgba(0,0,0,.8),transparent);padding-top:max(10px,env(safe-area-inset-top))}
+.ctl.bot{bottom:0;justify-content:center;background:linear-gradient(transparent,rgba(0,0,0,.8))}
+.ctl button{background:rgba(255,255,255,.12);font-size:18px;padding:8px 12px}
+.ctl .title{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.hide .ctl{opacity:0;pointer-events:none}
+.badge{background:var(--pri);color:var(--onpri);border-radius:6px;padding:2px 8px;font-size:12px;white-space:nowrap}
+#pmsg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);color:#fff;padding:14px 18px;border-radius:12px;max-width:85%;text-align:center;display:none}
+#pmsg.show{display:block}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="view"></div>
+  <nav id="nav"></nav>
+</div>
+<div id="splash"><div class="sp-title" id="spTitle" aria-label="SF İPTV PLAYER"></div><div class="sp-sub">Hoşgeldiniz</div><div class="sp-motto">🌿 Doğayı sev, Hayvanları Koru 🐾</div><div class="sp-paws" id="spPaws" aria-hidden="true"></div></div>
+<div id="modal"></div>
+<div id="toast"></div>
+<div id="player">
+  <video id="video" playsinline></video>
+  <div id="pmsg"></div>
+  <div class="ctl top">
+    <button id="pBack" title="Geri (Esc)">←</button>
+    <div class="title" id="pTitle"></div>
+    <span class="badge" id="pBadge" style="display:none"></span>
+    <button id="pFav" title="Favori">☆</button>
+    <button id="pFit" title="En-boy oranı">▭</button>
+    <button id="pFs" title="Tam ekran (F)">⛶</button>
+  </div>
+  <div class="ctl bot">
+    <button id="pPrev" title="Önceki kanal (↑)">⏮</button>
+    <button id="pBk" title="-10 sn (←)">⏪10</button>
+    <button id="pPlay" title="Oynat/Duraklat (Boşluk)">⏯</button>
+    <button id="pFw" title="+10 sn (→)">10⏩</button>
+    <button id="pNext" title="Sonraki kanal (↓)">⏭</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============ yardımcılar ============ */
+const $ = (s, e = document) => e.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const TL = { live: "Canlı", movie: "Film", series: "Dizi" };
+const ADULT_RE = /(^|[^a-z0-9])(xxx|adults?|porn\w*|sex\w*|erot\w*|18\+|\+18|yeti[sş]kin|hustler|playboy|brazzers|dorcel|penthouse|hardcore)([^a-z0-9]|$)/;
+
+/* ============ kütüphaneleri yükle (hls.js, mpegts.js) ============ */
+function loadScript(urls) {
+  return new Promise((res, rej) => {
+    let i = 0;
+    const next = () => {
+      if (i >= urls.length) return rej(new Error("yüklenemedi"));
+      const s = document.createElement("script");
+      s.src = urls[i++]; s.onload = () => res(); s.onerror = () => { s.remove(); next(); };
+      document.head.appendChild(s);
+    };
+    next();
+  });
+}
+const libs = {
+  hls: null, mpegts: null,
+  getHls() {
+    return this.hls ||= loadScript([
+      "https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.17/hls.min.js",
+      "https://unpkg.com/hls.js@1.5.17/dist/hls.min.js"]).catch(e => { this.hls = null; throw e; });
+  },
+  getTs() {
+    return this.mpegts ||= loadScript([
+      "https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js",
+      "https://unpkg.com/mpegts.js@1.7.3/dist/mpegts.js"]).catch(e => { this.mpegts = null; throw e; });
+  }
+};
+
+/* ============ takımlar ve tema (Trendyol Süper Lig 2026-27) ============ */
+// pri: düğme/vurgu rengi · acc: ikinci (parlak) renk · on: pri üzerindeki yazı rengi. Renkler yaklaşıktır.
+const TEAMS = [
+  { id: "", name: "Takımım yok", pri: "#5c7cff", acc: "#8fa6ff", on: "#fff" },
+  { id: "gs", name: "Galatasaray", pri: "#B0062F", acc: "#FDB912", on: "#fff" },
+  { id: "fb", name: "Fenerbahçe", pri: "#1F47A0", acc: "#FFE600", on: "#fff" },
+  { id: "bjk", name: "Beşiktaş", pri: "#ECECEC", acc: "#FFFFFF", on: "#111" },
+  { id: "ts", name: "Trabzonspor", pri: "#8B1E3F", acc: "#5BB4F0", on: "#fff" },
+  { id: "ibfk", name: "Başakşehir", pri: "#F26B21", acc: "#FF8A4C", on: "#111" },
+  { id: "kasim", name: "Kasımpaşa", pri: "#2D4BB5", acc: "#8FA8FF", on: "#fff" },
+  { id: "eyup", name: "Eyüpspor", pri: "#7B2CBF", acc: "#FFD400", on: "#fff" },
+  { id: "goz", name: "Göztepe", pri: "#E10600", acc: "#FFD100", on: "#fff" },
+  { id: "sam", name: "Samsunspor", pri: "#D40F14", acc: "#F2F2F2", on: "#fff" },
+  { id: "rize", name: "Çaykur Rizespor", pri: "#00873E", acc: "#4FA3FF", on: "#fff" },
+  { id: "konya", name: "Konyaspor", pri: "#00A650", acc: "#7DE3A9", on: "#fff" },
+  { id: "koc", name: "Kocaelispor", pri: "#0B8A3F", acc: "#9CE8B8", on: "#fff" },
+  { id: "alan", name: "Alanyaspor", pri: "#F28C1C", acc: "#2ECC71", on: "#111" },
+  { id: "gfk", name: "Gaziantep FK", pri: "#D4161C", acc: "#FF6B6B", on: "#fff" },
+  { id: "gb", name: "Gençlerbirliği", pri: "#D4161C", acc: "#FF6B6B", on: "#fff" },
+  { id: "erz", name: "Erzurumspor FK", pri: "#1E88E5", acc: "#6EC1FF", on: "#fff" },
+  { id: "amed", name: "Amed SF", pri: "#E30613", acc: "#3DDC84", on: "#fff" },
+  { id: "corum", name: "Çorum FK", pri: "#D4161C", acc: "#FF6B6B", on: "#fff" }
+];
+function applyTheme() {
+  const t = TEAMS.find(x => x.id === S.set.team) || TEAMS[0], r = document.documentElement.style;
+  r.setProperty("--pri", t.pri); r.setProperty("--acc", t.acc); r.setProperty("--onpri", t.on);
+  try { $('meta[name="theme-color"]').content = getComputedStyle(document.body).backgroundColor; } catch (e) {}
+}
+const teamGrid = () => `<div class="teams">${TEAMS.map(t => `<button class="team ${t.id === (S.set.team || "") ? "on" : ""}" data-team="${t.id}"><i style="background:linear-gradient(135deg,${t.pri} 50%,${t.acc} 50%)"></i>${esc(t.name)}</button>`).join("")}</div>`;
+function bindTeams(root) {
+  root.querySelectorAll("[data-team]").forEach(b => b.onclick = () => {
+    S.set.team = b.dataset.team; saveS(); applyTheme();
+    root.querySelectorAll("[data-team]").forEach(x => x.classList.toggle("on", x === b));
+  });
+}
+function toast(t) { const e = $("#toast"); e.textContent = t; e.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove("show"), 2000); }
+
+/* ============ durum ============ */
+const S = {
+  accs: LS.get("accs", []),
+  act: LS.get("act", -1),
+  set: Object.assign({ fmt: /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && "ontouchend" in document ? "m3u8" : "ts", proxy: "", buf: "high", team: "" }, LS.get("set", {})),
+  pin: LS.get("pin", null)
+};
+let D = null;                       // aktif hesabın verisi
+let cats = {}, items = {};          // önbellek (oturum boyunca)
+let unlocked = false;
+let tab = "live", catId = "", query = "", limit = 150, favT = "live", hisT = "all";
+let curList = [];                   // ekranda gösterilen liste (tıklama için)
+let loading = {};
+let showLogin = false;
+let curState = { k: "guard", tab: "live" };
+
+const acc = () => S.accs[S.act] || null;
+const base = a => { let h = a.host.trim(); if (!/^https?:\/\//i.test(h)) h = "http://" + h; return h.replace(/\/+$/, ""); };
+const dkey = () => { const a = acc(); return "d_" + btoa(unescape(encodeURIComponent(base(a) + "|" + a.username))); };
+function loadD() {
+  D = Object.assign({ fav: [], his: [], ord: {}, sort: {}, pos: {}, madult: [], msafe: [] }, acc() ? LS.get(dkey(), {}) : {});
+}
+const saveD = () => acc() && LS.set(dkey(), D);
+const saveS = () => { LS.set("accs", S.accs); LS.set("act", S.act); LS.set("set", S.set); LS.set("pin", S.pin); };
+
+/* ============ Xtream API ============ */
+function proxify(u) {
+  const p = (S.set.proxy || "").trim();
+  if (!p) return u;
+  return p.includes("{url}") ? p.replace("{url}", encodeURIComponent(u)) : p + encodeURIComponent(u);
+}
+async function api(params) {
+  const a = acc();
+  const q = new URLSearchParams({ username: a.username, password: a.password, ...params });
+  let r;
+  try { r = await fetch(proxify(base(a) + "/player_api.php?" + q), { cache: "no-store" }); }
+  catch (e) {
+    throw new Error("Sunucuya bağlanılamadı. Adres yanlış olabilir ya da sunucu tarayıcı erişimine (CORS) izin vermiyor. " +
+      "Ayarlar > 'CORS proxy' bölümüne bakın.");
+  }
+  if (!r.ok) throw new Error("Sunucu hatası (HTTP " + r.status + ")");
+  try { return await r.json(); } catch (e) { throw new Error("Sunucu geçerli bir Xtream yanıtı vermedi."); }
+}
+async function authenticate(a) {
+  const prev = S.accs, pa = S.act;
+  S.accs = [a]; S.act = 0;
+  try {
+    const d = await api({});
+    if (!d || !d.user_info) throw new Error("Sunucu geçerli bir Xtream Codes yanıtı vermedi.");
+    if (String(d.user_info.auth) !== "1") throw new Error("Kullanıcı adı veya şifre hatalı.");
+    const st = String(d.user_info.status || "");
+    if (st && st.toLowerCase() !== "active") throw new Error("Hesap aktif değil: " + st);
+  } finally { S.accs = prev; S.act = pa; }
+}
+const ACT = { live: ["get_live_categories", "get_live_streams"], movie: ["get_vod_categories", "get_vod_streams"], series: ["get_series_categories", "get_series"] };
+const nz = v => (v == null || v === "" || v === "null") ? null : String(v);
+async function loadType(t, force) {
+  if (force) { delete cats[t]; delete items[t]; delete loading[t]; }
+  if (items[t] && cats[t]) return;
+  return loading[t] ||= (async () => {
+    try {
+      const [c, l] = await Promise.all([api({ action: ACT[t][0] }), api({ action: ACT[t][1] })]);
+      cats[t] = (Array.isArray(c) ? c : []).map(x => ({ id: String(x.category_id), name: nz(x.category_name) || "?" }));
+      items[t] = (Array.isArray(l) ? l : []).map(m => ({
+        type: t, id: String(t === "series" ? m.series_id : m.stream_id), name: nz(m.name) || "?",
+        cat: nz(m.category_id) || "", icon: nz(t === "series" ? m.cover : m.stream_icon),
+        ext: nz(m.container_extension), added: parseInt(m.added || m.last_modified || 0) || 0
+      }));
+    } catch (e) { delete loading[t]; throw e; }
+  })();
+}
+async function loadCatsOnly(t) {
+  if (cats[t]) return;
+  try { const c = await api({ action: ACT[t][0] }); cats[t] = (Array.isArray(c) ? c : []).map(x => ({ id: String(x.category_id), name: nz(x.category_name) || "?" })); } catch (e) { cats[t] = []; }
+}
+function streamUrl(e) {
+  const a = acc(), u = encodeURIComponent(a.username), p = encodeURIComponent(a.password), b = base(a);
+  if (e.type === "live") return `${b}/live/${u}/${p}/${e.id}.${S.set.fmt}`;
+  return `${b}/${e.type === "movie" ? "movie" : "series"}/${u}/${p}/${e.id}.${e.ext || "mp4"}`;
+}
+async function seriesInfo(s) {
+  const d = await api({ action: "get_series_info", series_id: s.id });
+  const seasons = {};
+  const add = (sn, list) => {
+    if (!Array.isArray(list)) return;
+    list.forEach((e, i) => {
+      const season = parseInt(e.season) || sn, num = parseInt(e.episode_num) || i + 1;
+      (seasons[season] ||= []).push({ id: String(e.id), title: nz(e.title) || "Bölüm " + num, ext: nz(e.container_extension) || "mp4", season, num, icon: e.info && nz(e.info.movie_image) });
+    });
+  };
+  const eps = d && d.episodes;
+  if (Array.isArray(eps)) eps.forEach((l, i) => add(i + 1, l));
+  else if (eps && typeof eps === "object") Object.keys(eps).forEach(k => add(parseInt(k) || 1, eps[k]));
+  Object.values(seasons).forEach(l => l.sort((a, b) => a.num - b.num));
+  const inf = (d && d.info) || {};
+  return { seasons, plot: nz(inf.plot), cover: nz(inf.cover), genre: nz(inf.genre), rating: nz(inf.rating) };
+}
+
+/* ============ yetişkin kilidi ============ */
+function catAdult(t, c) {
+  const k = t + ":" + c.id;
+  if (D.msafe.includes(k)) return false;
+  if (D.madult.includes(k)) return true;
+  return ADULT_RE.test(c.name.toLowerCase());
+}
+const adultSet = t => new Set((cats[t] || []).filter(c => catAdult(t, c)).map(c => c.id));
+const itemLocked = i => !unlocked && (i.adult || adultSet(i.type).has(i.cat));
+const visCats = t => unlocked ? (cats[t] || []) : (cats[t] || []).filter(c => !catAdult(t, c));
+function fnv(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16); }
+async function hashPin(pin, salt) {
+  const s = salt + ":" + pin;
+  try {
+    if (crypto && crypto.subtle) {
+      const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+      return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
+    }
+  } catch (e) {}
+  return "f" + fnv(s) + fnv(s.split("").reverse().join(""));
+}
+function askPin() {
+  return new Promise(res => {
+    const create = !S.pin;
+    modal(`<div class="dlg"><h3>${create ? "Yetişkin PIN'i oluştur" : "Yetişkin içerik PIN'i"}</h3>
+      <input id="pin1" type="password" inputmode="numeric" maxlength="8" placeholder="${create ? "Yeni PIN (en az 4 hane)" : "PIN"}" autocomplete="off">
+      ${create ? '<input id="pin2" type="password" inputmode="numeric" maxlength="8" placeholder="PIN (tekrar)" autocomplete="off">' : ""}
+      <div class="err" id="pinErr"></div>
+      <div class="acts"><button id="pinNo">Vazgeç</button><button class="pri" id="pinOk">${create ? "Kaydet" : "Aç"}</button></div></div>`);
+    const err = m => $("#pinErr").textContent = m;
+    $("#pin1").focus();
+    modalCancel = () => res(false);
+    const done = ok => { modalCancel = null; closeModal(); res(ok); };
+    $("#pinNo").onclick = () => done(false);
+    const submit = async () => {
+      const p = $("#pin1").value.trim();
+      if (create) {
+        if (!/^\d{4,8}$/.test(p)) return err("PIN 4-8 haneli bir sayı olmalı.");
+        if (p !== $("#pin2").value.trim()) return err("PIN'ler eşleşmiyor.");
+        const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
+        S.pin = { salt, hash: await hashPin(p, salt) }; saveS(); unlocked = true; done(true);
+      } else {
+        if (await hashPin(p, S.pin.salt) === S.pin.hash) { unlocked = true; done(true); } else err("Yanlış PIN.");
+      }
+    };
+    $("#pinOk").onclick = submit;
+    $("#modal").onkeydown = e => { if (e.key === "Enter") submit(); };
+  });
+}
+async function toggleLock() {
+  if (unlocked) { unlocked = false; render(); return; }
+  if (await askPin()) render();
+}
+// Sekme gizlenince / arka plana alınınca kilitle
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) return;
+  closePlayer(true);                       // uygulama kapatıldı/arka plana alındı: kanal da kapansın
+  if (unlocked) { unlocked = false; render(); }
+});
+
+/* ============ modal ============ */
+let modalCancel = null;
+function modal(html) { const m = $("#modal"); modalCancel = null; m.innerHTML = html; m.classList.add("show"); m.onkeydown = null; }
+function closeModal() {
+  const m = $("#modal"), c = modalCancel; modalCancel = null;
+  m.classList.remove("show"); m.innerHTML = ""; m.onkeydown = null;
+  if (c) c();                                   // bekleyen PIN sözü vb. iptal edilsin
+}
+$("#modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+
+/* ============ favori / geçmiş / sıralama ============ */
+const isFav = i => D.fav.some(f => f.type === i.type && f.id === i.id);
+function toggleFav(i) {
+  const k = D.fav.findIndex(f => f.type === i.type && f.id === i.id);
+  if (k >= 0) D.fav.splice(k, 1);
+  else D.fav.unshift({ type: i.type, id: i.id, name: i.name || i.title, cat: i.cat, icon: i.icon, ext: i.ext, added: i.added || 0, adult: adultSet(i.type).has(i.cat) });
+  saveD();
+}
+function addHistory(e) {
+  D.his = D.his.filter(h => !(h.type === e.type && h.id === e.id));
+  D.his.unshift({ type: e.type, id: e.id, title: e.title, cat: e.cat, icon: e.icon, ext: e.ext, seriesId: e.seriesId, adult: adultSet(e.type).has(e.cat), ts: Date.now() });
+  D.his = D.his.slice(0, 300); saveD();
+}
+function applySort(list, key, mode) {
+  const L = [...list];
+  if (mode === "az") return L.sort((a, b) => a.name.localeCompare(b.name, "tr"));
+  if (mode === "za") return L.sort((a, b) => b.name.localeCompare(a.name, "tr"));
+  if (mode === "new") return L.sort((a, b) => b.added - a.added);
+  if (mode === "manual") {
+    const o = D.ord[key]; if (!o || !o.length) return L;
+    const idx = new Map(o.map((id, i) => [id, i]));
+    const known = L.filter(i => idx.has(i.id)).sort((a, b) => idx.get(a.id) - idx.get(b.id));
+    return known.concat(L.filter(i => !idx.has(i.id)));
+  }
+  return L;
+}
+const asEntry = i => ({ type: i.type, id: i.id, title: i.name || i.title, cat: i.cat, icon: i.icon, ext: i.ext, seriesId: i.seriesId });
+
+/* ============ ekranlar ============ */
+const NAV = [["live", "📺", "Canlı TV"], ["movie", "🎬", "Filmler"], ["series", "🎞️", "Diziler"], ["fav", "⭐", "Favoriler"], ["his", "🕘", "Geçmiş"], ["set", "⚙️", "Ayarlar"]];
+function render() {
+  const nav = $("#nav");
+  $("#view").onclick = null;
+  if (!acc() || showLogin) { nav.style.display = "none"; return renderLogin(); }
+  nav.style.display = "";
+  nav.innerHTML = NAV.map(([k, i, l]) => `<button data-tab="${k}" class="${tab === k ? "on" : ""}"><span class="i">${i}</span>${l}</button>`).join("");
+  if (tab === "live" || tab === "movie" || tab === "series") renderBrowse();
+  else if (tab === "fav") renderFav();
+  else if (tab === "his") renderHis();
+  else renderSettings();
+}
+$("#nav").addEventListener("click", e => {
+  const b = e.target.closest("[data-tab]"); if (!b || b.dataset.tab === tab) return;
+  tab = b.dataset.tab; catId = ""; query = ""; limit = 150;
+  curState = { k: "tab", tab }; history.pushState(curState, "");   // geri tuşu önceki menüye dönsün
+  render();
+});
+
+function renderLogin() {
+  const v = $("#view");
+  v.innerHTML = `<img class="hero" src="kedi.jpg" alt="">
+  <div class="login">${acc() ? '<button id="lBack">← Geri</button>' : ""}<h1>📺 SF İPTV Player</h1>
+    ${S.accs.length ? `<div class="sec" style="padding:0">Kayıtlı hesaplar</div>` + S.accs.map((a, i) => `<div class="acc ${i === S.act ? "on" : ""}" data-sel="${i}"><div style="flex:1;min-width:0"><b>${esc(a.name)}</b><div class="s" style="color:var(--mut);font-size:12px;overflow:hidden;text-overflow:ellipsis">${esc(a.host)} · ${esc(a.username)}</div></div><button class="ib" data-del="${i}" title="Sil">🗑</button></div>`).join("") : ""}
+    <div class="sec" style="padding:8px 0 0">Yeni hesap (Xtream Codes)</div>
+    <input id="lName" placeholder="Hesap adı (isteğe bağlı)">
+    <input id="lHost" placeholder="Sunucu adresi  (http://sunucu.com:8080)" inputmode="url" autocapitalize="off" autocorrect="off">
+    <input id="lUser" placeholder="Kullanıcı adı" autocapitalize="off" autocorrect="off">
+    <input id="lPass" type="password" placeholder="Şifre">
+    <div class="err" id="lErr"></div>
+    <button class="pri" id="lGo">Bağlan</button>
+    <div style="color:var(--mut);font-size:12.5px">Not: Bilgiler yalnızca bu cihazın tarayıcısında saklanır.</div></div>`;
+  const go = async () => {
+    const host = $("#lHost").value.trim(), user = $("#lUser").value.trim(), pass = $("#lPass").value;
+    if (!host || !user || !pass) return $("#lErr").textContent = "Sunucu, kullanıcı adı ve şifre gerekli.";
+    let name = $("#lName").value.trim();
+    if (!name) { try { name = new URL(/^https?:\/\//i.test(host) ? host : "http://" + host).hostname; } catch (e) { name = host; } }
+    const a = { name, host, username: user, password: pass };
+    const btn = $("#lGo"); btn.disabled = true; btn.textContent = "Bağlanıyor…"; $("#lErr").textContent = "";
+    try {
+      await authenticate(a);
+      const k = S.accs.findIndex(x => base(x) === base(a) && x.username === a.username);
+      if (k >= 0) S.accs[k] = a; else S.accs.push(a);
+      S.act = k >= 0 ? k : S.accs.length - 1; saveS(); selectAcc(S.act);
+    } catch (e) { $("#lErr").textContent = e.message; btn.disabled = false; btn.textContent = "Bağlan"; }
+  };
+  bindTeams(v);
+  if ($("#lBack")) $("#lBack").onclick = () => { showLogin = false; render(); };
+  $("#lGo").onclick = go; $("#lPass").onkeydown = e => { if (e.key === "Enter") go(); };
+  v.querySelectorAll("[data-sel]").forEach(el => el.onclick = e => { if (e.target.closest("[data-del]")) return; selectAcc(+el.dataset.sel); });
+  v.querySelectorAll("[data-del]").forEach(el => el.onclick = () => {
+    const i = +el.dataset.del; S.accs.splice(i, 1);
+    if (S.act === i) S.act = S.accs.length ? 0 : -1; else if (S.act > i) S.act--;
+    saveS(); if (S.act >= 0) selectAcc(S.act); else { D = null; showLogin = false; render(); }
+  });
+}
+function selectAcc(i) {
+  showLogin = false; curState = { k: "tab", tab: "live" }; history.replaceState(curState, ""); S.act = i; saveS(); loadD(); cats = {}; items = {}; loading = {}; unlocked = false; tab = "live"; catId = ""; query = ""; limit = 150; render();
+}
+
+async function renderBrowse() {
+  const v = $("#view"), t = tab;
+  if (!items[t]) {
+    v.innerHTML = `<div class="msg"><div class="spin"></div>Liste yükleniyor… (büyük listelerde biraz sürebilir)</div>`;
+    try { await loadType(t); } catch (e) {
+      if (tab !== t) return;
+      v.innerHTML = `<div class="msg">${esc(e.message)}<br><br><button class="pri" id="retry">Tekrar dene</button></div>`;
+      $("#retry").onclick = () => renderBrowse(); return;
+    }
+    if (tab !== t) return;
+  }
+  const cs = visCats(t);
+  if (catId && !cs.some(c => c.id === catId)) catId = "";
+  const key = t + "_" + (catId || "all"), mode = D.sort[key] || "default";
+  const adult = unlocked ? new Set() : adultSet(t);
+  let list = items[t].filter(i => !adult.has(i.cat));
+  if (catId) list = list.filter(i => i.cat === catId);
+  const q = query.trim().toLocaleLowerCase("tr");
+  if (q) list = list.filter(i => i.name.toLocaleLowerCase("tr").includes(q));
+  list = applySort(list, key, mode);
+  curList = list;
+  const manual = t === "live" && mode === "manual" && !q;
+
+  const bar = `<div class="bar">
+    <select id="fCat"><option value="">Tüm kategoriler</option>${cs.map(c => `<option value="${esc(c.id)}" ${c.id === catId ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select>
+    <input class="grow" id="fQ" placeholder="${TL[t]} ara… (${list.length})" value="${esc(query)}">
+    <select id="fSort"><option value="default">Sunucu sırası</option><option value="az">A → Z</option><option value="za">Z → A</option><option value="new">En yeni</option>${t === "live" ? '<option value="manual">Özel sıralama</option>' : ""}</select>
+    <button class="ib" id="fRef" title="Listeyi yenile">🔄</button>
+    <button class="ib" id="fLock" title="Yetişkin içerik kilidi">${unlocked ? "🔓" : "🔒"}</button></div>`;
+  const shown = list.slice(0, limit);
+  let body;
+  if (!list.length) body = `<div class="empty">Sonuç yok</div>`;
+  else if (t === "live") body = `<div class="list">${shown.map((i, k) => `<div class="row" data-open="${k}">
+      <img class="logo" loading="lazy" src="${esc(i.icon || "")}" onerror="this.style.visibility='hidden'" alt="">
+      <div class="t">${esc(i.name)}</div>
+      ${manual ? `<button class="ib" data-up="${k}" title="Yukarı">▲</button><button class="ib" data-dn="${k}" title="Aşağı">▼</button>` : ""}
+      <button class="ib fav" data-fav="${k}">${isFav(i) ? "★" : "☆"}</button></div>`).join("")}</div>`;
+  else body = `<div class="grid">${shown.map((i, k) => `<div class="card" data-open="${k}">
+      <img loading="lazy" src="${esc(i.icon || "")}" onerror="this.style.visibility='hidden'" alt="">
+      <div class="n">${esc(i.name)}</div><button class="ib fav st" data-fav="${k}">${isFav(i) ? "★" : "☆"}</button></div>`).join("")}</div>`;
+  const more = list.length > limit ? `<button class="more" id="fMore">Daha fazla göster (${list.length - limit})</button>` : "";
+  const scroll = v.scrollTop;
+  v.innerHTML = bar + body + more;
+  v.scrollTop = scroll;
+
+  $("#fSort").value = mode;
+  $("#fCat").onchange = e => { catId = e.target.value; limit = 150; v.scrollTop = 0; renderBrowse(); };
+  $("#fSort").onchange = e => { D.sort[key] = e.target.value; saveD(); renderBrowse(); };
+  const fq = $("#fQ"); let tm;
+  fq.oninput = () => { clearTimeout(tm); tm = setTimeout(() => { query = fq.value; limit = 150; renderBrowse().then(() => { const n = $("#fQ"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }); }, 300); };
+  $("#fRef").onclick = async () => { items[t] = null; delete cats[t]; delete loading[t]; renderBrowse(); };
+  $("#fLock").onclick = toggleLock;
+  if ($("#fMore")) $("#fMore").onclick = () => { limit += 300; renderBrowse(); };
+  v.onclick = e => {
+    const f = e.target.closest("[data-fav]");
+    if (f) { e.stopPropagation(); const i = shown[+f.dataset.fav]; toggleFav(i); f.textContent = isFav(i) ? "★" : "☆"; return; }
+    const up = e.target.closest("[data-up]"), dn = e.target.closest("[data-dn]");
+    if (up || dn) {
+      const k = +(up || dn).dataset[up ? "up" : "dn"], n = k + (up ? -1 : 1);
+      if (n < 0 || n >= list.length) return;
+      const ids = list.map(i => i.id); [ids[k], ids[n]] = [ids[n], ids[k]];
+      D.ord[key] = ids; saveD(); renderBrowse(); return;
+    }
+    const o = e.target.closest("[data-open]");
+    if (o) openItem(shown[+o.dataset.open], list);
+  };
+}
+function openItem(i, list) {
+  if (i.type === "series") return openSeries(i);
+  if (i.type === "live") { const k = list.indexOf(i); return openPlayer(list.map(asEntry), k < 0 ? 0 : k); }
+  openPlayer([asEntry(i)], 0);
+}
+async function openSeries(s) {
+  modal(`<div class="dlg big"><div class="msg"><div class="spin"></div>Yükleniyor…</div></div>`);
+  let info;
+  try { info = await seriesInfo(s); } catch (e) { modal(`<div class="dlg"><div class="err">${esc(e.message)}</div><div class="acts"><button id="x">Kapat</button></div></div>`); $("#x").onclick = closeModal; return; }
+  const seasons = Object.keys(info.seasons).map(Number).sort((a, b) => a - b);
+  if (!seasons.length) { modal(`<div class="dlg"><div>Bu dizi için bölüm bulunamadı.</div><div class="acts"><button id="x">Kapat</button></div></div>`); $("#x").onclick = closeModal; return; }
+  let cur = seasons[0];
+  const draw = () => {
+    const eps = info.seasons[cur];
+    modal(`<div class="dlg big"><div style="display:flex;gap:12px;align-items:flex-start">
+      <img class="logo" style="width:90px;height:130px;object-fit:cover" src="${esc(info.cover || s.icon || "")}" onerror="this.style.visibility='hidden'" alt="">
+      <div style="flex:1;min-width:0"><h3>${esc(s.name)}</h3><div style="color:var(--mut);font-size:13px">${esc([info.genre, info.rating && "Puan: " + info.rating].filter(Boolean).join(" · "))}</div>
+      <div style="font-size:13px;margin-top:6px;max-height:100px;overflow:auto">${esc(info.plot || "")}</div></div>
+      <button class="ib fav" id="sFav">${isFav(s) ? "★" : "☆"}</button></div>
+      <div class="tabs" style="padding:0">${seasons.map(n => `<button class="chip ${n === cur ? "on" : ""}" data-s="${n}">Sezon ${n}</button>`).join("")}</div>
+      <div>${eps.map((e, i) => `<div class="ep" data-e="${i}"><span style="width:28px;color:var(--mut)">${e.num}</span><span style="flex:1">${esc(e.title)}</span><span>${D.pos["series:" + e.id] ? "🕘" : "▶"}</span></div>`).join("")}</div>
+      <div class="acts"><button id="x">Kapat</button></div></div>`);
+    $("#x").onclick = closeModal;
+    $("#sFav").onclick = () => { toggleFav(s); $("#sFav").textContent = isFav(s) ? "★" : "☆"; };
+    $("#modal").querySelectorAll("[data-s]").forEach(b => b.onclick = () => { cur = +b.dataset.s; draw(); });
+    $("#modal").querySelectorAll("[data-e]").forEach(b => b.onclick = () => {
+      const entries = eps.map(e => ({ type: "series", id: e.id, title: `${s.name} · S${e.season} B${e.num}`, cat: s.cat, icon: e.icon || s.icon, ext: e.ext, seriesId: s.id }));
+      closeModal(); openPlayer(entries, +b.dataset.e);
+    });
+  };
+  draw();
+}
+
+function renderFav() {
+  const v = $("#view");
+  Object.keys(TL).forEach(t => { if (!cats[t]) loadCatsOnly(t).then(() => tab === "fav" && render()); });
+  const list = D.fav.filter(f => !itemLocked(f) && f.type === favT);
+  curList = list;
+  v.innerHTML = `<div class="tabs">${Object.keys(TL).map(t => `<button class="chip ${favT === t ? "on" : ""}" data-ft="${t}">${TL[t]}</button>`).join("")}</div>` +
+    (!list.length ? `<div class="empty">Henüz favori ${TL[favT].toLowerCase()} yok.<br>Yıldız simgesine dokunarak ekleyebilirsin.</div>` :
+      favT === "live" ? `<div class="list">${list.map((i, k) => `<div class="row" data-open="${k}"><img class="logo" loading="lazy" src="${esc(i.icon || "")}" onerror="this.style.visibility='hidden'" alt=""><div class="t">${esc(i.name)}</div><button class="ib fav" data-fav="${k}">★</button></div>`).join("")}</div>`
+        : `<div class="grid">${list.map((i, k) => `<div class="card" data-open="${k}"><img loading="lazy" src="${esc(i.icon || "")}" onerror="this.style.visibility='hidden'" alt=""><div class="n">${esc(i.name)}</div><button class="ib fav st" data-fav="${k}">★</button></div>`).join("")}</div>`);
+  v.onclick = e => {
+    const c = e.target.closest("[data-ft]"); if (c) { favT = c.dataset.ft; return renderFav(); }
+    const f = e.target.closest("[data-fav]"); if (f) { e.stopPropagation(); toggleFav(list[+f.dataset.fav]); return renderFav(); }
+    const o = e.target.closest("[data-open]"); if (o) openItem(list[+o.dataset.open], list);
+  };
+}
+
+function ago(ms) {
+  const m = Math.floor((Date.now() - ms) / 60000);
+  if (m < 1) return "şimdi"; if (m < 60) return m + " dk önce";
+  const h = Math.floor(m / 60); if (h < 24) return h + " sa önce";
+  const d = Math.floor(h / 24); return d < 30 ? d + " gün önce" : Math.floor(d / 30) + " ay önce";
+}
+function renderHis() {
+  const v = $("#view");
+  Object.keys(TL).forEach(t => { if (!cats[t]) loadCatsOnly(t).then(() => tab === "his" && render()); });
+  const rows = D.his.filter(h => !itemLocked(h) && (hisT === "all" || h.type === hisT));
+  v.innerHTML = `<div class="bar"><div class="tabs" style="padding:0;flex:1">${[["all", "Tümü"], ["live", "Canlı"], ["movie", "Film"], ["series", "Dizi"]].map(([k, l]) => `<button class="chip ${hisT === k ? "on" : ""}" data-ht="${k}">${l}</button>`).join("")}</div>
+    <button id="hClr" ${D.his.length ? "" : "disabled"}>Temizle</button></div>` +
+    (!rows.length ? `<div class="empty">İzleme geçmişi boş.</div>` : `<div class="list">${rows.map((h, k) => {
+      const pos = D.pos[h.type + ":" + h.id] || 0;
+      return `<div class="row" data-open="${k}"><img class="logo" loading="lazy" src="${esc(h.icon || "")}" onerror="this.style.visibility='hidden'" alt="">
+        <div class="t">${esc(h.title)}<div class="s">${TL[h.type]} · ${ago(h.ts)}${pos > 0 && h.type !== "live" ? " · " + Math.floor(pos / 60) + " dk'da kaldı" : ""}</div></div>
+        <button class="ib" data-rm="${k}">✕</button></div>`;
+    }).join("")}</div>`);
+  v.onclick = e => {
+    const c = e.target.closest("[data-ht]"); if (c) { hisT = c.dataset.ht; return renderHis(); }
+    if (e.target.closest("#hClr")) { if (confirm("Geçmiş temizlensin mi?")) { D.his = []; saveD(); renderHis(); } return; }
+    const r = e.target.closest("[data-rm]"); if (r) { e.stopPropagation(); D.his.splice(D.his.indexOf(rows[+r.dataset.rm]), 1); saveD(); return renderHis(); }
+    const o = e.target.closest("[data-open]"); if (o) openPlayer([rows[+o.dataset.open]], 0);
+  };
+}
+
+function renderSettings() {
+  const v = $("#view"), a = acc();
+  v.innerHTML = `
+  <div class="sec">Hesap</div>
+  <div class="set"><div class="t"><b>${esc(a.name)}</b><div class="s">${esc(a.host)} · ${esc(a.username)}</div></div><button id="sAcc">Hesaplar</button></div>
+  <div class="sec">Görünüm</div>
+  <div class="set"><div class="t">Tuttuğun takım<div class="s">${esc((TEAMS.find(x => x.id === S.set.team) || TEAMS[0]).name)} — uygulama renkleri takımına göre değişir.</div></div><button id="sTeam">Değiştir</button></div>
+  <div class="sec">Oynatıcı</div>
+  <div class="set"><div class="t">Canlı yayın formatı<div class="s">TS genelde daha hızlı açılır; HLS (m3u8) bazı sunucularda daha kararlıdır.</div></div>
+    <div class="seg"><button data-fmt="ts" class="${S.set.fmt === "ts" ? "on" : ""}">TS</button><button data-fmt="m3u8" class="${S.set.fmt === "m3u8" ? "on" : ""}">HLS</button></div></div>
+  <div class="set" style="flex-wrap:wrap"><div class="t">Ara bellek<div class="s">${esc(bufCfg().info)} — oynatmadan önce ${bufCfg().pre} sn biriktirir. Sık takılıyorsa yükseltin; kanal geç açılıyorsa düşürün.</div></div>
+    <div class="seg">${Object.keys(BUF).map(k => `<button data-buf="${k}" class="${S.set.buf === k ? "on" : ""}">${BUF[k].label}</button>`).join("")}</div></div>
+  <div class="set"><div class="t">CORS proxy (isteğe bağlı)<div class="s">Sunucu tarayıcı erişimine izin vermiyorsa kullanılır. Boş bırakın. <code>{url}</code> yer tutucusu desteklenir.</div>
+    <input id="sProxy" placeholder="https://… {url}" value="${esc(S.set.proxy)}" style="margin-top:6px"></div></div>
+  <div class="sec">Yetişkin içerik</div>
+  <div class="set"><div class="t">${unlocked ? "Kilit açık" : "Kilitli"}<div class="s">${S.pin ? "Yetişkin kategoriler PIN ile korunuyor. Sekme arka plana alınınca otomatik kilitlenir." : "Henüz PIN yok. Kilidi açmaya çalışınca oluşturulur."}</div></div><button id="sLock">${unlocked ? "Kilitle" : "Kilidi aç"}</button></div>
+  ${S.pin ? `<div class="set"><div class="t">PIN değiştir</div><button id="sPin">Değiştir</button></div>` : ""}
+  <div class="set"><div class="t">Yetişkin kategorilerini seç<div class="s">Otomatik algılananları düzeltebilir, yenilerini ekleyebilirsin.</div></div><button id="sCats">Düzenle</button></div>
+  <div class="sec">Veri</div>
+  <div class="set"><div class="t">İzleme geçmişi</div><button id="sHis">Temizle</button></div>
+  <div class="set"><div class="t">Favoriler</div><button id="sFav">Temizle</button></div>
+  <div class="sec">Klavye kısayolları</div>
+  <div class="set"><div class="s">Boşluk: oynat/duraklat · F: tam ekran · M: sessiz · ↑/↓: önceki/sonraki kanal · ←/→: ±10 sn · Esc: geri</div></div>
+  <div style="height:30px"></div>`;
+  $("#sTeam").onclick = () => {
+    modal(`<div class="dlg big"><h3>Tuttuğun takım</h3>${teamGrid()}<div class="acts"><button class="pri" id="x">Bitti</button></div></div>`);
+    bindTeams($("#modal")); $("#x").onclick = () => { closeModal(); render(); };
+  };
+  $("#sAcc").onclick = () => { showLogin = true; render(); };
+  v.querySelectorAll("[data-fmt]").forEach(b => b.onclick = () => { S.set.fmt = b.dataset.fmt; saveS(); renderSettings(); });
+  v.querySelectorAll("[data-buf]").forEach(b => b.onclick = () => { S.set.buf = b.dataset.buf; saveS(); renderSettings(); });
+  $("#sProxy").onchange = e => { S.set.proxy = e.target.value.trim(); saveS(); cats = {}; items = {}; loading = {}; };
+  $("#sLock").onclick = async () => { await toggleLock(); };
+  if ($("#sPin")) $("#sPin").onclick = async () => {
+    if (!(await askPin())) return;
+    S.pin = null; saveS(); await askPin(); renderSettings();
+  };
+  $("#sCats").onclick = async () => { if (await askPin()) editAdultCats(); };
+  $("#sHis").onclick = () => { D.his = []; saveD(); renderSettings(); };
+  $("#sFav").onclick = () => { D.fav = []; saveD(); renderSettings(); };
+}
+async function editAdultCats() {
+  modal(`<div class="dlg big"><div class="msg"><div class="spin"></div>Kategoriler yükleniyor…</div></div>`);
+  await Promise.all(Object.keys(TL).map(loadCatsOnly));
+  const draw = () => {
+    modal(`<div class="dlg big"><h3>Yetişkin kategorileri</h3>${Object.keys(TL).map(t => `<div class="sec" style="padding:8px 0 2px">${TL[t]}</div>` +
+      (cats[t] || []).map(c => `<label class="ep"><input type="checkbox" style="width:auto" data-c="${t}:${esc(c.id)}" ${catAdult(t, c) ? "checked" : ""}><span>${esc(c.name)}</span></label>`).join("")).join("")}
+      <div class="acts"><button class="pri" id="x">Bitti</button></div></div>`);
+    $("#x").onclick = () => { closeModal(); render(); };
+    $("#modal").querySelectorAll("[data-c]").forEach(cb => cb.onchange = () => {
+      const k = cb.dataset.c.replace(/&amp;/g, "&");
+      D.madult = D.madult.filter(x => x !== k); D.msafe = D.msafe.filter(x => x !== k);
+      (cb.checked ? D.madult : D.msafe).push(k); saveD();
+    });
+  };
+  draw();
+}
+
+/* ============ oynatıcı ============ */
+// pre: oynatmaya başlamadan önce biriktirilecek saniye · stash: mpegts.js ham veri arabelleği (KB)
+// hls: hls.js ileri arabellek (sn) · sync: canlı HLS'te kenardan uzaklık (parça sayısı)
+const BUF = {
+  low:   { label: "Düşük",      pre: 1,  stash: 384,  hls: 20,  sync: 3, info: "En hızlı açılış, iyi internet için" },
+  normal:{ label: "Normal",     pre: 3,  stash: 1024, hls: 40,  sync: 4, info: "Dengeli" },
+  high:  { label: "Yüksek",     pre: 8,  stash: 3072, hls: 90,  sync: 6, info: "Takılmaya karşı, birkaç sn geç açılır" },
+  max:   { label: "Çok yüksek", pre: 15, stash: 6144, hls: 180, sync: 8, info: "Zayıf/dalgalı internet için, ~15 sn geç açılır" }
+};
+const bufCfg = () => BUF[S.set.buf] || BUF.high;
+const P = { entries: [], idx: 0, hls: null, ts: null, retries: 0, timer: null, hideT: null, token: 0 };
+const vid = $("#video");
+function pmsg(t) { const m = $("#pmsg"); if (t) { m.innerHTML = t; m.classList.add("show"); } else m.classList.remove("show"); }
+function destroyEngines() {
+  clearInterval(P.gateT); P.gateT = null; clearTimeout(P.waitT);
+  try { P.hls && P.hls.destroy(); } catch (e) {} P.hls = null;
+  try { if (P.ts) { P.ts.pause(); P.ts.unload(); P.ts.detachMediaElement(); P.ts.destroy(); } } catch (e) {} P.ts = null;
+  try { vid.pause(); } catch (e) {}
+  vid.removeAttribute("src"); try { vid.load(); } catch (e) {}
+}
+function openPlayer(entries, idx) {
+  P.entries = entries; P.idx = idx; P.retries = 0; P.session = Date.now();
+  $("#player").classList.add("show"); showCtl();
+  const multi = entries.length > 1;
+  $("#pPrev").style.display = $("#pNext").style.display = multi ? "" : "none";
+  clearInterval(P.timer); P.timer = setInterval(savePos, 10000);
+  clearInterval(P.watch); P.lastT = -1; P.lastMove = Date.now();
+  P.watch = setInterval(() => {
+    const e = P.entries[P.idx];
+    if (!e || e.type !== "live" || P.gateT || vid.paused) { P.lastMove = Date.now(); return; }
+    if (Math.abs(vid.currentTime - P.lastT) > 0.05) { P.lastT = vid.currentTime; P.lastMove = Date.now(); return; }
+    if (Date.now() - P.lastMove > 20000) { P.lastMove = Date.now(); fail(P.token, "Akış takıldı (20 sn veri gelmedi)"); }
+  }, 2000);
+  startCurrent();
+}
+const playerOpen = () => $("#player").classList.contains("show");
+async function startCurrent() {
+  if (!playerOpen()) return;
+  const e = P.entries[P.idx], tok = ++P.token;
+  const live = e.type === "live";
+  $("#pTitle").textContent = e.title; $("#pBadge").style.display = "none";
+  $("#pBk").style.display = $("#pFw").style.display = live ? "none" : "";
+  $("#pFav").textContent = isFav(e) ? "★" : "☆";
+  pmsg(P.retries ? `Bağlantı yeniden deneniyor (${P.retries}/5)…` : "Yükleniyor…");
+  if (P.counted !== e.type + e.id + P.idx + "_" + P.session) { P.counted = e.type + e.id + P.idx + "_" + P.session; addHistory(e); }
+  destroyEngines();
+  const url = proxify(streamUrl(e));
+  const pos = live ? 0 : (D.pos[e.type + ":" + e.id] || 0);
+  const resume = () => { if (pos > 10) { const f = () => { try { vid.currentTime = pos - 3; } catch (x) {} vid.removeEventListener("loadedmetadata", f); }; vid.addEventListener("loadedmetadata", f); } };
+  const bc = bufCfg();
+  try {
+    if (live && S.set.fmt === "ts") {
+      await libs.getTs(); if (tok !== P.token) return;
+      if (window.mpegts && mpegts.isSupported()) {
+        P.ts = mpegts.createPlayer({ type: "mpegts", isLive: true, url }, {
+          enableWorker: true,
+          enableStashBuffer: true, stashInitialSize: bc.stash,
+          liveBufferLatencyChasing: false,           // sürekli ileri atlayıp takılmayı önler
+          lazyLoadMaxDuration: Math.max(60, bc.pre * 4),
+          autoCleanupSourceBuffer: true, autoCleanupMaxBackwardDuration: 60, autoCleanupMinBackwardDuration: 30
+        });
+        P.ts.attachMediaElement(vid);
+        P.ts.on(mpegts.Events.ERROR, (a, b, c) => fail(tok, b + (c && c.msg ? ": " + c.msg : "")));
+        P.ts.load(); gatePlay(tok);
+      } else { vid.src = url; gatePlay(tok); }
+    } else if (/m3u8$/i.test(live ? S.set.fmt : (e.ext || ""))) {
+      if (vid.canPlayType("application/vnd.apple.mpegurl")) { vid.src = url; resume(); gatePlay(tok); }
+      else {
+        await libs.getHls(); if (tok !== P.token) return;
+        P.hls = new Hls({
+          enableWorker: true, lowLatencyMode: false,
+          maxBufferLength: bc.hls, maxMaxBufferLength: bc.hls * 2, maxBufferSize: 200 * 1000 * 1000,
+          liveSyncDurationCount: bc.sync, liveMaxLatencyDurationCount: bc.sync * 3,
+          backBufferLength: 30, nudgeMaxRetry: 10,
+          manifestLoadingMaxRetry: 4, levelLoadingMaxRetry: 4, fragLoadingMaxRetry: 6
+        });
+        P.hls.on(Hls.Events.ERROR, (ev, d) => {
+          if (!d.fatal) return;
+          if (d.type === Hls.ErrorTypes.MEDIA_ERROR) { try { P.hls.recoverMediaError(); return; } catch (x) {} }
+          fail(tok, d.details);
+        });
+        P.hls.loadSource(url); P.hls.attachMedia(vid); resume(); gatePlay(tok);
+      }
+    } else { vid.src = url; resume(); gatePlay(tok); }
+  } catch (err) { fail(tok, err.message || String(err)); return; }
+}
+function bufAhead() {
+  const b = vid.buffered, t = vid.currentTime;
+  for (let i = 0; i < b.length; i++) if (b.start(i) <= t + 0.5 && b.end(i) >= t) return b.end(i) - t;
+  return b.length ? Math.max(0, b.end(b.length - 1) - t) : 0;
+}
+// Yeterli ara bellek birikene kadar bekle, sonra oynat (en fazla 30 sn bekler).
+function gatePlay(tok) {
+  clearInterval(P.gateT); P.gateT = null;
+  const need = bufCfg().pre;
+  if (need <= 0) { vid.play().catch(() => {}); return; }
+  const t0 = Date.now(); try { vid.pause(); } catch (e) {}
+  P.gateT = setInterval(() => {
+    if (tok !== P.token) { clearInterval(P.gateT); P.gateT = null; return; }
+    const ahead = bufAhead(), waited = (Date.now() - t0) / 1000;
+    if (ahead >= need || waited > 30) {
+      clearInterval(P.gateT); P.gateT = null; pmsg(""); vid.play().catch(() => {}); return;
+    }
+    pmsg(`Ara belleğe alınıyor… ${ahead.toFixed(1)} / ${need} sn`);
+  }, 300);
+}
+function fail(tok, why) {
+  if (tok !== P.token) return;
+  const e = P.entries[P.idx];
+  if (e.type === "live" && P.retries < 5) { P.retries++; pmsg(`Bağlantı yeniden deneniyor (${P.retries}/5)…`); setTimeout(() => tok === P.token && playerOpen() && startCurrent(), 2000); return; }
+  pmsg(`Oynatılamadı.<br><small>${esc(why || "")}</small><br><small style="opacity:.8">Sunucu CORS'a izin vermiyor olabilir; Ayarlar'dan CORS proxy girin veya canlı formatı TS ↔ HLS değiştirin.</small><br><br><button id="pRetry" class="pri">Tekrar dene</button>`);
+  const r = $("#pRetry"); if (r) r.onclick = () => { P.retries = 0; startCurrent(); };
+}
+function savePos() {
+  const e = P.entries[P.idx]; if (!e || e.type === "live" || !isFinite(vid.duration)) return;
+  const p = Math.floor(vid.currentTime), d = vid.duration;
+  if (p < 5) return;
+  D.pos[e.type + ":" + e.id] = (p > d - 30) ? 0 : p; if (!D.pos[e.type + ":" + e.id]) delete D.pos[e.type + ":" + e.id];
+  saveD();
+}
+function closePlayer(silent) {
+  if (!playerOpen()) return;
+  savePos(); P.token++; clearInterval(P.timer); clearInterval(P.watch); destroyEngines(); pmsg("");
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  $("#player").classList.remove("show");
+  if (silent !== true) render();
+}
+function go(d) {
+  const n = P.entries.length; if (n < 2) return;
+  savePos(); P.idx = (P.idx + d + n) % n; P.retries = 0; startCurrent();
+}
+function showCtl() { const p = $("#player"); p.classList.remove("hide"); clearTimeout(P.hideT); P.hideT = setTimeout(() => !vid.paused && p.classList.add("hide"), 4000); }
+$("#player").addEventListener("mousemove", showCtl);
+$("#player").addEventListener("touchstart", showCtl, { passive: true });
+$("#player").addEventListener("click", e => { if (e.target === vid) { const p = $("#player"); if (p.classList.contains("hide")) showCtl(); else p.classList.add("hide"); } });
+$("#pBack").onclick = () => closePlayer();
+$("#pPrev").onclick = () => go(-1); $("#pNext").onclick = () => go(1);
+$("#pBk").onclick = () => vid.currentTime = Math.max(0, vid.currentTime - 10);
+$("#pFw").onclick = () => vid.currentTime = vid.currentTime + 10;
+$("#pPlay").onclick = () => vid.paused ? vid.play() : vid.pause();
+$("#pFs").onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else $("#player").requestFullscreen && $("#player").requestFullscreen().catch(() => {}); };
+$("#pFit").onclick = () => { const p = $("#player"); if (p.classList.contains("cover")) { p.classList.remove("cover"); p.classList.add("fill"); } else if (p.classList.contains("fill")) p.classList.remove("fill"); else p.classList.add("cover"); };
+$("#pFav").onclick = () => { const e = P.entries[P.idx]; if (e.type === "series") return; toggleFav(e); $("#pFav").textContent = isFav(e) ? "★" : "☆"; };
+vid.addEventListener("playing", () => { clearTimeout(P.waitT); if (!P.gateT) pmsg(""); P.retries = 0; });
+vid.addEventListener("waiting", () => {
+  if (P.gateT) return;
+  clearTimeout(P.waitT);
+  P.waitT = setTimeout(() => { if (!P.gateT && !vid.paused) pmsg(`Ara belleğe alınıyor… (${bufAhead().toFixed(1)} sn)`); }, 800);   // kısa takılmalarda mesaj gösterme
+});
+vid.addEventListener("timeupdate", () => { if (!P.gateT && !vid.paused && $("#pmsg").classList.contains("show") && !$("#pRetry")) { clearTimeout(P.waitT); pmsg(""); } });
+vid.addEventListener("error", () => { const e = P.entries[P.idx]; if (e && playerOpen() && !P.ts && !P.hls) fail(P.token, vid.error ? "Medya hatası " + vid.error.code : ""); });
+vid.addEventListener("ended", () => { const e = P.entries[P.idx]; if (e.type === "live") { if (playerOpen()) setTimeout(startCurrent, 1000); return; } delete D.pos[e.type + ":" + e.id]; saveD(); if (e.type === "series" && P.idx < P.entries.length - 1) go(1); });
+function badge() {
+  const w = vid.videoWidth, h = vid.videoHeight; if (!w) return;
+  const l = w >= 7000 ? "8K" : w >= 3600 ? "4K" : w >= 2400 ? "2K" : w >= 1800 ? "FHD" : w >= 1200 ? "HD" : "SD";
+  const b = $("#pBadge"); b.textContent = `${l} ${w}×${h}`; b.style.display = "";
+}
+vid.addEventListener("loadedmetadata", badge); vid.addEventListener("resize", badge);
+document.addEventListener("keydown", e => {
+  if (!$("#player").classList.contains("show")) return;
+  showCtl(); const live = P.entries[P.idx].type === "live";
+  switch (e.key) {
+    case " ": e.preventDefault(); vid.paused ? vid.play() : vid.pause(); break;
+    case "ArrowUp": case "PageUp": e.preventDefault(); go(-1); break;
+    case "ArrowDown": case "PageDown": e.preventDefault(); go(1); break;
+    case "ArrowLeft": if (!live) vid.currentTime = Math.max(0, vid.currentTime - 10); break;
+    case "ArrowRight": if (!live) vid.currentTime += 10; break;
+    case "f": case "F": $("#pFs").click(); break;
+    case "m": case "M": vid.muted = !vid.muted; break;
+    case "Escape": if (!document.fullscreenElement) closePlayer(); break;
+  }
+});
+window.addEventListener("pagehide", () => closePlayer(true));
+window.addEventListener("beforeunload", () => closePlayer(true));
+document.addEventListener("freeze", () => closePlayer(true));
+// ----- geri tuşu: önce açık oynatıcı/pencere kapanır, sonra önceki menüye dönülür, en başta iki kez basınca çıkılır -----
+history.replaceState({ k: "root" }, "");
+history.pushState(curState, "");
+let exiting = false;
+function askExit() {
+  modal(`<div class="dlg"><h3>Uygulamadan çıkılsın mı?</h3><div style="color:var(--mut)">Çıkarsan açık yayın da kapanır.</div>
+    <div class="acts"><button id="exNo">Hayır, kal</button><button class="pri" id="exYes">Evet, çık</button></div></div>`);
+  $("#exNo").onclick = () => closeModal();
+  $("#exYes").onclick = () => { modalCancel = null; closeModal(); doExit(); };
+  $("#exNo").focus();
+}
+function doExit() {
+  closePlayer(true); exiting = true; history.back();
+  setTimeout(() => {                 // tarayıcı sekmeyi kendiliğinden kapatamadıysa bilgi ver
+    try { window.close(); } catch (e) {}
+    modal(`<div class="dlg"><h3>Çıkış yapıldı 👋</h3><div style="color:var(--mut)">Tarayıcı sekmesini kapatabilirsin.</div>
+      <div class="acts"><button class="pri" id="exBack">Uygulamaya dön</button></div></div>`);
+    $("#exBack").onclick = () => { exiting = false; curState = { k: "guard", tab: "live" }; history.pushState(curState, ""); closeModal(); };
+  }, 600);
+}
+window.addEventListener("popstate", e => {
+  const y = e.state || { k: "root" };
+  if (playerOpen()) { closePlayer(); history.pushState(curState, ""); return; }
+  if ($("#modal").classList.contains("show")) { closeModal(); history.pushState(curState, ""); return; }
+  if (showLogin && acc()) { showLogin = false; render(); history.pushState(curState, ""); return; }
+  if (y.k === "root") {
+    if (exiting) { history.back(); return; }                       // onaylandı: uygulamadan gerçekten çık
+    curState = { k: "guard", tab: "live" }; history.pushState(curState, "");   // henüz çıkma, önce sor
+    if (tab !== "live") { tab = "live"; catId = ""; query = ""; limit = 150; render(); }
+    askExit(); return;
+  }
+  curState = y;
+  if (y.tab && y.tab !== tab) { tab = y.tab; catId = ""; query = ""; limit = 150; }
+  render();
+});
+
+/* ============ açılış ekranı (3 sn) ============ */
+(function () {
+  const t = $("#spTitle"), sp = $("#splash");
+  [..."SF İPTV PLAYER"].forEach((ch, i) => {
+    const e = document.createElement("span"); e.style.setProperty("--i", i);
+    e.textContent = ch === " " ? "\u00a0" : ch; t.appendChild(e);
+  });
+  // kedi patileri soldan sağa yürür (sağ/sol pati dönüşümlü, hafif zikzak)
+  const paws = $("#spPaws"), N = 9;
+  const svg = '<svg viewBox="0 0 64 64"><ellipse cx="32" cy="43" rx="14" ry="11.5"/><ellipse cx="13" cy="30" rx="6" ry="8" transform="rotate(-22 13 30)"/><ellipse cx="25" cy="17" rx="6.2" ry="8.8"/><ellipse cx="39" cy="17" rx="6.2" ry="8.8"/><ellipse cx="51" cy="30" rx="6" ry="8" transform="rotate(22 51 30)"/></svg>';
+  for (let i = 0; i < N; i++) {
+    const d = document.createElement("div"); d.innerHTML = svg;
+    const e = d.firstChild; e.classList.add("sp-paw");
+    e.style.left = (5 + i * (88 / (N - 1))) + "%";
+    e.style.top = (i % 2 ? 46 : 8) + "px";
+    e.style.setProperty("--i", i); e.style.setProperty("--r", (90 + (i % 2 ? 14 : -14)) + "deg");
+    paws.appendChild(e);
+  }
+  setTimeout(() => { sp.classList.add("out"); setTimeout(() => sp.remove(), 600); }, 5000);
+})();
+
+/* ============ başlat ============ */
+if (S.act >= 0 && S.act < S.accs.length) loadD(); else S.act = -1;
+applyTheme();
+render();
+</script>
+<script>if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
+</body>
+</html>
