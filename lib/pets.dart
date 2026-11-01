@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'i18n.dart';
 
 /// Açılış sayfasında üst ekranı tamamen kaplayan sevimli yavru kedi fotoğrafı
 /// (uçtan uca, hafif nefes alma hareketi, altta yumuşak geçiş ve uygulama adı).

@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../i18n.dart';
 import 'package:provider/provider.dart';
 
 import '../models.dart';
@@ -32,7 +33,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
         title: Text(widget.series.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           IconButton(
-            tooltip: fav ? 'Favorilerden çıkar' : 'Favorilere ekle',
+            tooltip: tr(fav ? 'Favorilerden çıkar' : 'Favorilere ekle'),
             icon: Icon(fav ? Icons.star : Icons.star_border, color: fav ? Colors.amber : null),
             onPressed: () => s.toggleFav(widget.series),
           ),
@@ -93,7 +94,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (info.genre != null) Text(info.genre!),
-                          if (info.rating != null) Text('Puan: ${info.rating}'),
+                          if (info.rating != null) Text(trf('Puan: {r}', {'r': info.rating})),
                           const SizedBox(height: 8),
                           Text(info.plot ?? '', maxLines: 8, overflow: TextOverflow.ellipsis),
                         ],
@@ -111,7 +112,7 @@ class _SeriesDetailScreenState extends State<SeriesDetailScreen> {
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: ChoiceChip(
-                          label: Text('Sezon $sn'),
+                          label: Text(trf('Sezon {n}', {'n': sn})),
                           selected: sn == season,
                           onSelected: (_) => setState(() => _season = sn),
                         ),

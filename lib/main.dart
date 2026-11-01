@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:provider/provider.dart';
 
@@ -74,7 +75,16 @@ class _IptvAppState extends State<IptvApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final teamId = context.select<AppState, String>((s) => s.team);
+    final lang = context.select<AppState, String>((s) => s.lang);
     return MaterialApp(
+      key: ValueKey(lang), // dil değişince tüm arayüz yeniden çizilir
+      locale: Locale(lang),
+      supportedLocales: const [Locale('tr'), Locale('en'), Locale('de'), Locale('fr')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       title: 'SF İPTV Player',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(teamById(teamId)),

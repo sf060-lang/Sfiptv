@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../i18n.dart';
 import 'package:provider/provider.dart';
 
 import '../models.dart';
@@ -77,8 +78,8 @@ class _FavList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (list.isEmpty) {
       return Center(
-        child: Text('Henüz favori ${typeLabel(type).toLowerCase()} yok.\n'
-            'Yıldız simgesine dokunarak ekleyebilirsin.',
+        child: Text(trf('Henüz favori {t} yok.\nTamam tuşunu 3 sn basılı tutarak (veya uzun basarak) ekleyebilirsin.',
+                {'t': tr(typeLabel(type)).toLowerCase()}),
             textAlign: TextAlign.center),
       );
     }

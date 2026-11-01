@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -168,7 +169,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
               onChanged: (v) => setState(() => _q = v),
               decoration: InputDecoration(
                 isDense: true,
-                hintText: '${typeLabel(t)} ara…  ($count)',
+                hintText: '${tr('${typeLabel(t)} ara…')}  ($count)',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _q.isEmpty
                     ? null
@@ -184,7 +185,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
             ),
           ),
           PopupMenuButton<String>(
-            tooltip: 'Sırala',
+            tooltip: tr('Sırala'),
             icon: const Icon(Icons.sort),
             onSelected: (m) => s.setSort(key, m),
             itemBuilder: (_) => [
@@ -196,12 +197,12 @@ class _BrowseScreenState extends State<BrowseScreen> {
             ],
           ),
           IconButton(
-            tooltip: 'Listeyi yenile',
+            tooltip: tr('Listeyi yenile'),
             icon: const Icon(Icons.refresh),
             onPressed: () => _reload(force: true),
           ),
           IconButton(
-            tooltip: s.adultUnlocked ? 'Yetişkin içeriği kilitle' : 'Yetişkin içeriği aç',
+            tooltip: tr(s.adultUnlocked ? 'Yetişkin içeriği kilitle' : 'Yetişkin içeriği aç'),
             icon: Icon(s.adultUnlocked ? Icons.lock_open : Icons.lock_outline,
                 color: s.adultUnlocked ? Colors.orangeAccent : null),
             onPressed: () async {

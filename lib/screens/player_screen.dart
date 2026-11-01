@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:android_intent_plus/android_intent.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -165,7 +166,7 @@ class _PlayerScreenState extends State<BuiltInPlayerScreen> with WidgetsBindingO
         player.play();
       } else {
         final shown = ahead < 0 ? 0.0 : (ahead > need ? need.toDouble() : ahead);
-        gateMsg.value = 'Ara belleğe alınıyor… ${shown.toStringAsFixed(1)} / $need sn';
+        gateMsg.value = trf('Ara belleğe alınıyor… {a} / {b} sn', {'a': shown.toStringAsFixed(1), 'b': need});
       }
     });
   }
@@ -184,12 +185,12 @@ class _PlayerScreenState extends State<BuiltInPlayerScreen> with WidgetsBindingO
     if (_disposed) return;
     if (_isLive && retries < 5) {
       retries++;
-      error.value = 'Bağlantı yeniden deneniyor ($retries/5)…';
+      error.value = trf('Bağlantı yeniden deneniyor ({n}/5)…', {'n': retries});
       Future.delayed(const Duration(seconds: 2), () {
         if (!_disposed) _open();
       });
     } else {
-      error.value = 'Oynatılamadı: $e';
+      error.value = trf('Oynatılamadı: {e}', {'e': e});
     }
   }
 
@@ -523,7 +524,7 @@ class _ControlsState extends State<_Controls> {
                   builder: (_, __) {
                     final fav = host.st.isFavEntry(e);
                     return IconButton(
-                      tooltip: 'Favori',
+                      tooltip: tr('Favori'),
                       icon: Icon(fav ? Icons.star : Icons.star_border,
                           color: fav ? Colors.amber : null),
                       onPressed: () => host.st.toggleFavEntry(e),
@@ -537,7 +538,7 @@ class _ControlsState extends State<_Controls> {
             ValueListenableBuilder<BoxFit>(
               valueListenable: host.fit,
               builder: (_, f, __) => IconButton(
-                tooltip: 'En-boy oranı',
+                tooltip: tr('En-boy oranı'),
                 icon: const Icon(Icons.aspect_ratio),
                 onPressed: () {
                   host.fit.value = switch (f) {
@@ -551,7 +552,7 @@ class _ControlsState extends State<_Controls> {
             ),
             if (!host.isMobile)
               IconButton(
-                tooltip: 'Tam ekran (F)',
+                tooltip: tr('Tam ekran (F)'),
                 icon: const Icon(Icons.fullscreen),
                 onPressed: () => toggleFullscreen(context),
               ),
@@ -608,10 +609,10 @@ class _ControlsState extends State<_Controls> {
       title = x.title;
       lang = x.language;
     }
-    if (id == 'auto') return 'Otomatik';
-    if (id == 'no') return 'Kapalı';
+    if (id == 'auto') return tr('Otomatik');
+    if (id == 'no') return tr('Kapalı');
     final parts = [title, lang].where((e) => e != null && e.isNotEmpty).join(' · ');
-    return parts.isEmpty ? 'Parça $id' : parts;
+    return parts.isEmpty ? trf('Parça {id}', {'id': id}) : parts;
   }
 
   Widget _trackMenu({required bool audio}) {
@@ -623,7 +624,7 @@ class _ControlsState extends State<_Controls> {
         final List<Object> list = audio ? t.audio : t.subtitle;
         if (list.length <= 2) return const SizedBox.shrink();
         return PopupMenuButton<Object>(
-          tooltip: audio ? 'Ses' : 'Altyazı',
+          tooltip: tr(audio ? 'Ses' : 'Altyazı'),
           icon: Icon(audio ? Icons.audiotrack : Icons.subtitles),
           onSelected: (v) {
             if (v is AudioTrack) p.setAudioTrack(v);
@@ -649,14 +650,14 @@ class _ControlsState extends State<_Controls> {
             if (multi)
               IconButton(
                 iconSize: 40,
-                tooltip: 'Önceki (↑)',
+                tooltip: tr('Önceki (↑)'),
                 icon: const Icon(Icons.skip_previous),
                 onPressed: () => host.go(-1),
               ),
             if (!live)
               IconButton(
                 iconSize: 40,
-                tooltip: '-10 sn (←)',
+                tooltip: tr('-10 sn (←)'),
                 icon: const Icon(Icons.replay_10),
                 onPressed: () => _seekBy(-10),
               ),
@@ -672,14 +673,14 @@ class _ControlsState extends State<_Controls> {
             if (!live)
               IconButton(
                 iconSize: 40,
-                tooltip: '+10 sn (→)',
+                tooltip: tr('+10 sn (→)'),
                 icon: const Icon(Icons.forward_10),
                 onPressed: () => _seekBy(10),
               ),
             if (multi)
               IconButton(
                 iconSize: 40,
-                tooltip: 'Sonraki (↓)',
+                tooltip: tr('Sonraki (↓)'),
                 icon: const Icon(Icons.skip_next),
                 onPressed: () => host.go(1),
               ),
@@ -841,7 +842,7 @@ class _ExternalLauncherState extends State<_ExternalLauncher> {
         arguments: {'title': e.title},
       );
       if (widget.pkg == 'chooser') {
-        await intent.launchChooser('Oynatıcı seç');
+        await intent.launchChooser(tr('Oynatıcı seç'));
       } else {
         await intent.launch();
       }
@@ -849,7 +850,7 @@ class _ExternalLauncherState extends State<_ExternalLauncher> {
     } catch (err) {
       if (mounted) {
         setState(() => _err =
-            'Oynatıcı açılamadı. Uygulama yüklü mü?\n(${widget.pkg})');
+            trf('Oynatıcı açılamadı. Uygulama yüklü mü?\n({pkg})', {'pkg': widget.pkg}));
       }
     }
   }

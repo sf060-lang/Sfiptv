@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -69,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Account? _build() {
     final host = _host.text.trim();
     if (host.isEmpty || _user.text.trim().isEmpty || _pass.text.isEmpty) {
-      setState(() => _error = 'Sunucu, kullanıcı adı ve şifre gerekli.');
+      setState(() => _error = tr('Sunucu, kullanıcı adı ve şifre gerekli.'));
       return null;
     }
     return Account(
@@ -166,6 +167,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                  const LangPicker(),
+                  const SizedBox(height: 16),
                   if (s.accounts.isNotEmpty) ...[
                     Text('Kayıtlı hesaplar', style: Theme.of(context).textTheme.titleSmall),
                     for (var i = 0; i < s.accounts.length; i++)
@@ -196,8 +199,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     focusNode: _fName,
                     textInputAction: TextInputAction.next,
                     onSubmitted: (_) => _fHost.requestFocus(),
-                    decoration: const InputDecoration(
-                        labelText: 'Hesap adı (isteğe bağlı)', border: OutlineInputBorder()),
+                    decoration: InputDecoration(
+                        labelText: tr('Hesap adı (isteğe bağlı)'), border: const OutlineInputBorder()),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -207,10 +210,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     autocorrect: false,
                     textInputAction: TextInputAction.next,
                     onSubmitted: (_) => _fUser.requestFocus(),
-                    decoration: const InputDecoration(
-                        labelText: 'Sunucu adresi',
+                    decoration: InputDecoration(
+                        labelText: tr('Sunucu adresi'),
                         hintText: 'http://sunucu.com:8080',
-                        border: OutlineInputBorder()),
+                        border: const OutlineInputBorder()),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -219,8 +222,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     autocorrect: false,
                     textInputAction: TextInputAction.next,
                     onSubmitted: (_) => _fPass.requestFocus(),
-                    decoration: const InputDecoration(
-                        labelText: 'Kullanıcı adı', border: OutlineInputBorder()),
+                    decoration: InputDecoration(
+                        labelText: tr('Kullanıcı adı'), border: const OutlineInputBorder()),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -230,7 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _connect(),
                     decoration: InputDecoration(
-                      labelText: 'Şifre',
+                      labelText: tr('Şifre'),
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(_showPass ? Icons.visibility_off : Icons.visibility),
@@ -242,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Padding(
                       padding: const EdgeInsets.only(top: 12),
                       child: Text(
-                          'Uyarı: kayıt belleği açılamadı, bilgiler kalıcı olmayabilir. (${context.read<AppState>().prefs.error})',
+                          trf('Uyarı: kayıt belleği açılamadı, bilgiler kalıcı olmayabilir. ({e})', {'e': context.read<AppState>().prefs.error}),
                           style: const TextStyle(color: Colors.orangeAccent)),
                     ),
                   if (_error != null)

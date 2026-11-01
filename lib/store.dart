@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show WidgetsBinding;
+import 'i18n.dart';
 import 'prefs.dart';
 
 import 'models.dart';
@@ -38,6 +40,7 @@ class AppState extends ChangeNotifier {
   int active = -1;
   String liveFormat = 'ts'; // 'ts' | 'm3u8'
   bool hwAccel = false;
+  String lang = 'tr';
   String team = ''; // tuttuğu takım (teams.dart)
   String buf = 'high'; // ara bellek ön ayarı
   String? _pinHash, _pinSalt;
@@ -76,6 +79,9 @@ class AppState extends ChangeNotifier {
     liveFormat = prefs.getString('liveFormat') ?? 'ts';
     hwAccel = prefs.getBool('hw') ?? false;
     team = prefs.getString('team') ?? '';
+    final dev = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    lang = prefs.getString('lang') ?? (L.codes.contains(dev) ? dev : 'en');
+    L.lang = lang;
     buf = prefs.getString('buf') ?? 'high';
     _pinHash = prefs.getString('pinHash');
     _pinSalt = prefs.getString('pinSalt');
@@ -350,6 +356,13 @@ class AppState extends ChangeNotifier {
     ];
     prefs.setStringList('extCustom', l);
     if (extPlayer == pkg) prefs.setString('ext', '');
+    notifyListeners();
+  }
+
+  void setLang(String id) {
+    lang = id;
+    L.lang = id;
+    prefs.setString('lang', id);
     notifyListeners();
   }
 

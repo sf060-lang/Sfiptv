@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../i18n.dart';
 import 'package:provider/provider.dart';
 
 import '../models.dart';
@@ -26,11 +27,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   String _ago(int ms) {
     final d = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(ms));
-    if (d.inMinutes < 1) return 'şimdi';
-    if (d.inMinutes < 60) return '${d.inMinutes} dk önce';
-    if (d.inHours < 24) return '${d.inHours} sa önce';
-    if (d.inDays < 30) return '${d.inDays} gün önce';
-    return '${(d.inDays / 30).floor()} ay önce';
+    if (d.inMinutes < 1) return tr('şimdi');
+    if (d.inMinutes < 60) return trf('{n} dk önce', {'n': d.inMinutes});
+    if (d.inHours < 24) return trf('{n} sa önce', {'n': d.inHours});
+    if (d.inDays < 30) return trf('{n} gün önce', {'n': d.inDays});
+    return trf('{n} ay önce', {'n': (d.inDays / 30).floor()});
   }
 
   @override
@@ -64,7 +65,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
               ),
               IconButton(
-                tooltip: 'Geçmişi temizle',
+                tooltip: tr('Geçmişi temizle'),
                 icon: const Icon(Icons.delete_sweep_outlined),
                 onPressed: s.history.isEmpty
                     ? null
@@ -114,7 +115,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       subtitle: Text([
                         typeLabel(e.type),
                         _ago(ts),
-                        if (pos > 0 && e.type != MediaType.live) '${(pos / 60).floor()} dk\'da kaldı',
+                        if (pos > 0 && e.type != MediaType.live) trf('{n} dk\'da kaldı', {'n': (pos / 60).floor()}),
                       ].join(' · ')),
                       trailing: IconButton(
                         icon: const Icon(Icons.close),

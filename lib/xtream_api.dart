@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'i18n.dart';
 import 'models.dart';
 
 dynamic _decode(Uint8List b) => jsonDecode(utf8.decode(b, allowMalformed: true));
@@ -27,7 +28,7 @@ class XtreamApi {
     final r = await http
         .get(_u(q), headers: {'User-Agent': ua}).timeout(const Duration(seconds: 90));
     if (r.statusCode != 200) {
-      throw Exception('Sunucu hatası (HTTP ${r.statusCode})');
+      throw Exception(trf('Sunucu hatası (HTTP {c})', {'c': r.statusCode}));
     }
     // Buyuk listeleri (20-50 bin kayit) arayuzu dondurmadan ayristir.
     return compute(_decode, r.bodyBytes);
@@ -36,15 +37,15 @@ class XtreamApi {
   Future<Map<String, dynamic>> authenticate() async {
     final d = await _get();
     if (d is! Map || d['user_info'] is! Map) {
-      throw Exception('Sunucu geçerli bir Xtream Codes yanıtı vermedi.');
+      throw Exception(tr('Sunucu geçerli bir Xtream Codes yanıtı vermedi.'));
     }
     final ui = Map<String, dynamic>.from(d['user_info'] as Map);
     if ('${ui['auth']}' != '1') {
-      throw Exception('Kullanıcı adı veya şifre hatalı.');
+      throw Exception(tr('Kullanıcı adı veya şifre hatalı.'));
     }
     final st = '${ui['status'] ?? ''}';
     if (st.isNotEmpty && st.toLowerCase() != 'active') {
-      throw Exception('Hesap aktif değil: $st');
+      throw Exception(trf('Hesap aktif değil: {s}', {'s': st}));
     }
     return ui;
   }
@@ -94,7 +95,7 @@ class XtreamApi {
         final season = int.tryParse('${e['season']}') ?? sn;
         seasons.putIfAbsent(season, () => []).add(Episode(
               id: '${e['id']}',
-              title: str(e['title']) ?? 'Bölüm $num',
+              title: str(e['title']) ?? trf('Bölüm {n}', {'n': num}),
               ext: str(e['container_extension']) ?? 'mp4',
               season: season,
               num: num,

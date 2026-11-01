@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'i18n.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -123,9 +124,9 @@ class _PinDialogState extends State<PinDialog> {
     final pin = _a.text.trim();
     if (widget.create) {
       if (pin.length < 4) {
-        setState(() => _err = 'PIN en az 4 haneli olmalı.');
+        setState(() => _err = tr('PIN en az 4 haneli olmalı.'));
       } else if (pin != _b.text.trim()) {
-        setState(() => _err = 'PIN\'ler eşleşmiyor.');
+        setState(() => _err = tr('PIN\'ler eşleşmiyor.'));
       } else {
         s.setPin(pin).then((_) {
           if (mounted) Navigator.pop(context, true);
@@ -135,7 +136,7 @@ class _PinDialogState extends State<PinDialog> {
       if (s.unlock(pin)) {
         Navigator.pop(context, true);
       } else {
-        setState(() => _err = 'Yanlış PIN.');
+        setState(() => _err = tr('Yanlış PIN.'));
       }
     }
   }
@@ -165,7 +166,7 @@ class _PinDialogState extends State<PinDialog> {
             keyboardType: TextInputType.number,
             maxLength: 8,
             decoration: InputDecoration(
-                labelText: widget.create ? 'Yeni PIN (en az 4 hane)' : 'PIN'),
+                labelText: tr(widget.create ? 'Yeni PIN (en az 4 hane)' : 'PIN')),
             onSubmitted: (_) {
               if (widget.create) {
                 _fb.requestFocus();
@@ -181,7 +182,7 @@ class _PinDialogState extends State<PinDialog> {
               obscureText: true,
               keyboardType: TextInputType.number,
               maxLength: 8,
-              decoration: const InputDecoration(labelText: 'PIN (tekrar)'),
+              decoration: InputDecoration(labelText: tr('PIN (tekrar)')),
               onSubmitted: (_) => _submit(),
             ),
           if (_err != null)
@@ -449,6 +450,28 @@ class _PosterState extends State<Poster> {
         ),
         ),
       ),
+    );
+  }
+}
+
+
+/// Dil seçici: Türkçe / English / Deutsch / Français.
+class LangPicker extends StatelessWidget {
+  const LangPicker({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final s = context.watch<AppState>();
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final c in L.codes)
+          ChoiceChip(
+            label: Text(L.langs[c]!),
+            selected: s.lang == c,
+            onSelected: (_) => s.setLang(c),
+          ),
+      ],
     );
   }
 }

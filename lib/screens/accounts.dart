@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../i18n.dart';
 import 'package:provider/provider.dart';
 
 import '../store.dart';
@@ -14,7 +15,7 @@ class AccountsScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Abonelik silinsin mi?'),
-        content: Text('"$name" listeden kaldırılacak. Bu aboneliğin favorileri ve geçmişi de silinir.'),
+        content: Text(trf('"{name}" listeden kaldırılacak. Bu aboneliğin favorileri ve geçmişi de silinir.', {'name': name})),
         actions: [
           TextButton(
               autofocus: true,
@@ -61,19 +62,19 @@ class AccountsScreen extends StatelessWidget {
                     : () {
                         s.selectAccount(i);
                         ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('${s.accounts[i].name} aboneliğine geçildi')));
+                            SnackBar(content: Text(trf('{name} aboneliğine geçildi', {'name': s.accounts[i].name}))));
                       },
                 trailing: i == s.active
                     ? Row(mainAxisSize: MainAxisSize.min, children: [
                         const Chip(label: Text('Kullanımda')),
                         IconButton(
-                          tooltip: 'Sil',
+                          tooltip: tr('Sil'),
                           icon: const Icon(Icons.delete_outline),
                           onPressed: () => _delete(context, s, i),
                         ),
                       ])
                     : IconButton(
-                        tooltip: 'Sil',
+                        tooltip: tr('Sil'),
                         icon: const Icon(Icons.delete_outline),
                         onPressed: () => _delete(context, s, i),
                       ),

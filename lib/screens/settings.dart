@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../i18n.dart';
 import 'package:provider/provider.dart';
 
 import '../models.dart';
@@ -61,11 +62,11 @@ class SettingsScreen extends StatelessWidget {
               controller: n,
               autofocus: true,
               textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(labelText: 'Ad (ör. Benim oynatıcım)')),
+              decoration: InputDecoration(labelText: tr('Ad (ör. Benim oynatıcım)'))),
           TextField(
               controller: p,
               autocorrect: false,
-              decoration: const InputDecoration(labelText: 'Paket adı (ör. org.videolan.vlc)')),
+              decoration: InputDecoration(labelText: tr('Paket adı (ör. org.videolan.vlc)'))),
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
@@ -87,6 +88,8 @@ class SettingsScreen extends StatelessWidget {
 
     return ListView(
       children: [
+        const _Header('Dil / Language'),
+        const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: LangPicker()),
         const _Header('Hesap'),
         ListTile(
           leading: const Icon(Icons.dns),
@@ -111,7 +114,7 @@ class SettingsScreen extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.palette_outlined),
           title: const Text('Tuttuğun takım'),
-          subtitle: Text('${teamById(s.team).name} — uygulama renkleri takımına göre değişir'),
+          subtitle: Text(trf('{n} — uygulama renkleri takımına göre değişir', {'n': tr(teamById(s.team).name)})),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => showDialog<void>(
             context: context,
@@ -149,8 +152,8 @@ class SettingsScreen extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.speed),
           title: const Text('Ara bellek'),
-          subtitle: Text('${s.bufPreset.info} — oynatmadan önce ${s.bufPreset.pre} sn biriktirir. '
-              'Sık takılıyorsa yükseltin; kanal geç açılıyorsa düşürün.'),
+          subtitle: Text(trf('{info} — oynatmadan önce {pre} sn biriktirir. Sık takılıyorsa yükseltin; kanal geç açılıyorsa düşürün.',
+              {'info': tr(s.bufPreset.info), 'pre': s.bufPreset.pre})),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -167,7 +170,7 @@ class SettingsScreen extends StatelessWidget {
             ],
           ),
         ),
-        const _Header('Oynatıcı'),
+        const _Header('Oynatıcı uygulaması'),
         ..._players(context, s),
         const _Header('Yetişkin içerik'),
         ListTile(
