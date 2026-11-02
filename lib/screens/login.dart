@@ -23,30 +23,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final _host = TextEditingController();
   final _user = TextEditingController();
   final _pass = TextEditingController();
-  final _fName = FocusNode(), _fHost = FocusNode(), _fUser = FocusNode(), _fPass = FocusNode();
   bool _busy = false, _showPass = false;
   String? _error;
-
-  // Kumandada yukarı/aşağı tuşları alanlar arasında gezdirir (klavye kapalıyken de).
-  KeyEventResult _vkey(FocusNode n, KeyEvent e) {
-    if (e is! KeyDownEvent) return KeyEventResult.ignored;
-    if (e.logicalKey == LogicalKeyboardKey.arrowDown) {
-      FocusScope.of(context).nextFocus();
-      return KeyEventResult.handled;
-    }
-    if (e.logicalKey == LogicalKeyboardKey.arrowUp) {
-      FocusScope.of(context).previousFocus();
-      return KeyEventResult.handled;
-    }
-    return KeyEventResult.ignored;
-  }
 
   @override
   void initState() {
     super.initState();
-    for (final f in [_fName, _fHost, _fUser, _fPass]) {
-      f.onKeyEvent = _vkey;
-    }
     try {
       final d = context.read<AppState>().draft;
       if (d != null) {
@@ -104,9 +86,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     for (final c in [_name, _host, _user, _pass]) {
       c.removeListener(_saveDraft);
-    }
-    for (final f in [_fName, _fHost, _fUser, _fPass]) {
-      f.dispose();
     }
     super.dispose();
   }
@@ -194,44 +173,32 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text('Kullanıcı ekle (Xtream Codes)',
                       style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 8),
-                  TextField(
+                  OkTextField(
                     controller: _name,
-                    focusNode: _fName,
-                    textInputAction: TextInputAction.next,
-                    onSubmitted: (_) => _fHost.requestFocus(),
                     decoration: InputDecoration(
                         labelText: tr('Hesap adı (isteğe bağlı)'), border: const OutlineInputBorder()),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
+                  OkTextField(
                     controller: _host,
-                    focusNode: _fHost,
                     keyboardType: TextInputType.url,
                     autocorrect: false,
-                    textInputAction: TextInputAction.next,
-                    onSubmitted: (_) => _fUser.requestFocus(),
                     decoration: InputDecoration(
                         labelText: tr('Sunucu adresi'),
                         hintText: 'http://sunucu.com:8080',
                         border: const OutlineInputBorder()),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
+                  OkTextField(
                     controller: _user,
-                    focusNode: _fUser,
                     autocorrect: false,
-                    textInputAction: TextInputAction.next,
-                    onSubmitted: (_) => _fPass.requestFocus(),
                     decoration: InputDecoration(
                         labelText: tr('Kullanıcı adı'), border: const OutlineInputBorder()),
                   ),
                   const SizedBox(height: 12),
-                  TextField(
+                  OkTextField(
                     controller: _pass,
-                    focusNode: _fPass,
                     obscureText: !_showPass,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _connect(),
                     decoration: InputDecoration(
                       labelText: tr('Şifre'),
                       border: const OutlineInputBorder(),

@@ -86,9 +86,119 @@ Future<bool> askUnlock(BuildContext context) async {
   return ok == true;
 }
 
+/// Kumandalı cihazlarda (Android TV/kutu) yukarı/aşağı tuşları klavyeyi açmadan satırlar arasında
+/// gezdirir; satırın üzerindeyken Tamam (OK) tuşuna basınca klavye açılır. Dokunmatikte ve
+/// bilgisayarda normal metin kutusu gibi çalışır.
+class OkTextField extends StatefulWidget {
+  const OkTextField({
+    super.key,
+    required this.controller,
+    this.decoration,
+    this.obscureText = false,
+    this.keyboardType,
+    this.maxLength,
+    this.autocorrect = true,
+    this.autofocus = false,
+    this.directional = false,
+    this.onSubmitted,
+    this.onChanged,
+  });
+  final TextEditingController controller;
+  final InputDecoration? decoration;
+  final bool obscureText, autocorrect, autofocus;
+  final bool directional; // true: yön tuşlarıyla (arama kutusu), false: okuma sırasıyla
+  final TextInputType? keyboardType;
+  final int? maxLength;
+  final ValueChanged<String>? onSubmitted, onChanged;
+  @override
+  State<OkTextField> createState() => _OkTextFieldState();
+}
+
+class _OkTextFieldState extends State<OkTextField> {
+  static final bool _remote = Platform.isAndroid;
+  late final FocusNode _node = FocusNode(onKeyEvent: _onKey);
+  late bool _editing = !_remote;
+
+  static bool _isSelect(LogicalKeyboardKey k) =>
+      k == LogicalKeyboardKey.select ||
+      k == LogicalKeyboardKey.enter ||
+      k == LogicalKeyboardKey.numpadEnter ||
+      k == LogicalKeyboardKey.gameButtonA;
+
+  @override
+  void initState() {
+    super.initState();
+    _node.addListener(() {
+      if (!_node.hasFocus && _remote && _editing && mounted) setState(() => _editing = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _node.dispose();
+    super.dispose();
+  }
+
+  void _start() {
+    if (!_remote) return;
+    if (!_editing) setState(() => _editing = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _node.hasFocus) SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+    });
+  }
+
+  void _end() {
+    if (!_remote) return;
+    if (_editing) setState(() => _editing = false);
+    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+  }
+
+  KeyEventResult _onKey(FocusNode n, KeyEvent e) {
+    if (e is! KeyDownEvent) return KeyEventResult.ignored;
+    final k = e.logicalKey;
+    if (_remote && !_editing && _isSelect(k)) {
+      _start();
+      return KeyEventResult.handled;
+    }
+    if (k == LogicalKeyboardKey.arrowDown) {
+      widget.directional ? n.focusInDirection(TraversalDirection.down) : n.nextFocus();
+      return KeyEventResult.handled;
+    }
+    if (k == LogicalKeyboardKey.arrowUp) {
+      widget.directional ? n.focusInDirection(TraversalDirection.up) : n.previousFocus();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: widget.controller,
+      focusNode: _node,
+      autofocus: widget.autofocus,
+      readOnly: _remote && !_editing,
+      obscureText: widget.obscureText,
+      keyboardType: widget.keyboardType,
+      maxLength: widget.maxLength,
+      autocorrect: widget.autocorrect,
+      textInputAction: TextInputAction.done,
+      decoration: widget.decoration,
+      onChanged: widget.onChanged,
+      onTap: _start,
+      onSubmitted: (v) {
+        _end();
+        widget.onSubmitted?.call(v);
+      },
+    );
+  }
+}
+
+/// Şifre penceresi. [settings] false: yetişkin içerik PIN'i, true: Ayarlar şifresi.
+/// [create] true: yeni şifre belirleme (iki kez), false: doğrulama.
 class PinDialog extends StatefulWidget {
-  const PinDialog({super.key, required this.create});
-  final bool create;
+  const PinDialog({super.key, required this.create, this.settings = false});
+  final bool create, settings;
   @override
   State<PinDialog> createState() => _PinDialogState();
 }
@@ -96,47 +206,27 @@ class PinDialog extends StatefulWidget {
 class _PinDialogState extends State<PinDialog> {
   final _a = TextEditingController();
   final _b = TextEditingController();
-  final _fa = FocusNode(), _fb = FocusNode();
   String? _err;
-
-  KeyEventResult _vkey(FocusNode n, KeyEvent e) {
-    if (e is! KeyDownEvent) return KeyEventResult.ignored;
-    if (e.logicalKey == LogicalKeyboardKey.arrowDown) {
-      FocusScope.of(context).nextFocus();
-      return KeyEventResult.handled;
-    }
-    if (e.logicalKey == LogicalKeyboardKey.arrowUp) {
-      FocusScope.of(context).previousFocus();
-      return KeyEventResult.handled;
-    }
-    return KeyEventResult.ignored;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _fa.onKeyEvent = _vkey;
-    _fb.onKeyEvent = _vkey;
-  }
 
   void _submit() {
     final s = context.read<AppState>();
     final pin = _a.text.trim();
+    final st = widget.settings;
     if (widget.create) {
       if (pin.length < 4) {
-        setState(() => _err = tr('PIN en az 4 haneli olmalı.'));
+        setState(() => _err = tr(st ? 'Şifre en az 4 haneli olmalı.' : 'PIN en az 4 haneli olmalı.'));
       } else if (pin != _b.text.trim()) {
-        setState(() => _err = tr('PIN\'ler eşleşmiyor.'));
+        setState(() => _err = tr(st ? 'Şifreler eşleşmiyor.' : 'PIN\'ler eşleşmiyor.'));
       } else {
-        s.setPin(pin).then((_) {
+        (st ? s.setSettingsPass(pin) : s.setPin(pin)).then((_) {
           if (mounted) Navigator.pop(context, true);
         });
       }
     } else {
-      if (s.unlock(pin)) {
+      if (st ? s.unlockSettings(pin) : s.unlock(pin)) {
         Navigator.pop(context, true);
       } else {
-        setState(() => _err = tr('Yanlış PIN.'));
+        setState(() => _err = tr(st ? 'Yanlış şifre.' : 'Yanlış PIN.'));
       }
     }
   }
@@ -145,44 +235,41 @@ class _PinDialogState extends State<PinDialog> {
   void dispose() {
     _a.dispose();
     _b.dispose();
-    _fa.dispose();
-    _fb.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final st = widget.settings;
+    final title = st
+        ? (widget.create ? 'Yeni ayarlar şifresi' : 'Ayarlar şifresi')
+        : (widget.create ? 'Yetişkin PIN\'i oluştur' : 'Yetişkin içerik PIN\'i');
     return AlertDialog(
-      title: Text(widget.create ? 'Yetişkin PIN\'i oluştur' : 'Yetişkin içerik PIN\'i'),
+      title: Text(title),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
+          OkTextField(
             controller: _a,
-            focusNode: _fa,
             autofocus: true,
-            textInputAction: widget.create ? TextInputAction.next : TextInputAction.done,
             obscureText: true,
             keyboardType: TextInputType.number,
             maxLength: 8,
             decoration: InputDecoration(
-                labelText: tr(widget.create ? 'Yeni PIN (en az 4 hane)' : 'PIN')),
+                labelText: tr(widget.create
+                    ? (st ? 'Yeni şifre (en az 4 hane)' : 'Yeni PIN (en az 4 hane)')
+                    : (st ? 'Şifre' : 'PIN'))),
             onSubmitted: (_) {
-              if (widget.create) {
-                _fb.requestFocus();
-              } else {
-                _submit();
-              }
+              if (!widget.create) _submit();
             },
           ),
           if (widget.create)
-            TextField(
+            OkTextField(
               controller: _b,
-              focusNode: _fb,
               obscureText: true,
               keyboardType: TextInputType.number,
               maxLength: 8,
-              decoration: InputDecoration(labelText: tr('PIN (tekrar)')),
+              decoration: InputDecoration(labelText: tr(st ? 'Şifre (tekrar)' : 'PIN (tekrar)')),
               onSubmitted: (_) => _submit(),
             ),
           if (_err != null)

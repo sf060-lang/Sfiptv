@@ -23,20 +23,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
   String _q = '';
   late Future<void> _fut;
   final _search = TextEditingController();
-  late final FocusNode _fSearch = FocusNode(onKeyEvent: (n, e) {
-    // Arama kutusunda yukarı/aşağı tuşları odağı komşu öğeye taşır.
-    if (e is! KeyDownEvent) return KeyEventResult.ignored;
-    if (e.logicalKey == LogicalKeyboardKey.arrowDown) {
-      n.focusInDirection(TraversalDirection.down);
-      return KeyEventResult.handled;
-    }
-    if (e.logicalKey == LogicalKeyboardKey.arrowUp) {
-      n.focusInDirection(TraversalDirection.up);
-      return KeyEventResult.handled;
-    }
-    return KeyEventResult.ignored;
-  });
-
   @override
   void initState() {
     super.initState();
@@ -46,7 +32,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
   @override
   void dispose() {
     _search.dispose();
-    _fSearch.dispose();
     super.dispose();
   }
 
@@ -161,11 +146,9 @@ class _BrowseScreenState extends State<BrowseScreen> {
             ),
           if (!wide) const SizedBox(width: 8),
           Expanded(
-            child: TextField(
+            child: OkTextField(
               controller: _search,
-              focusNode: _fSearch,
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _fSearch.focusInDirection(TraversalDirection.down),
+              directional: true,
               onChanged: (v) => setState(() => _q = v),
               decoration: InputDecoration(
                 isDense: true,

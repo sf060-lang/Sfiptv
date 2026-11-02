@@ -40,6 +40,18 @@ class Text extends m.StatelessWidget {
 }
 
 const Map<String, List<String>> _t = {
+  'Yeni ayarlar şifresi': ['New settings password', 'Neues Einstellungspasswort', 'Nouveau mot de passe des paramètres'],
+  'Ayarlar şifresi': ['Settings password', 'Einstellungspasswort', 'Mot de passe des paramètres'],
+  'Şifre en az 4 haneli olmalı.': ['Password must be at least 4 digits.', 'Das Passwort muss mindestens 4 Ziffern haben.', 'Le mot de passe doit comporter au moins 4 chiffres.'],
+  'Şifreler eşleşmiyor.': ['Passwords do not match.', 'Die Passwörter stimmen nicht überein.', 'Les mots de passe ne correspondent pas.'],
+  'Yanlış şifre.': ['Wrong password.', 'Falsches Passwort.', 'Mot de passe incorrect.'],
+  'Yeni şifre (en az 4 hane)': ['New password (min. 4 digits)', 'Neues Passwort (mind. 4 Ziffern)', 'Nouveau mot de passe (4 chiffres min.)'],
+  'Şifre (tekrar)': ['Password (repeat)', 'Passwort (wiederholen)', 'Mot de passe (répéter)'],
+  'Güvenlik': ['Security', 'Sicherheit', 'Sécurité'],
+  'Ayarlar şifresini değiştir': ['Change settings password', 'Einstellungspasswort ändern', 'Changer le mot de passe des paramètres'],
+  'Varsayılan şifre 0000. Değiştirmeni öneririz.': ['Default password is 0000. We recommend changing it.', 'Standardpasswort ist 0000. Wir empfehlen, es zu ändern.', 'Le mot de passe par défaut est 0000. Nous te conseillons de le changer.'],
+  'Ayarlar kilitli': ['Settings are locked', 'Einstellungen sind gesperrt', 'Les paramètres sont verrouillés'],
+  'Şifreyi gir': ['Enter password', 'Passwort eingeben', 'Saisir le mot de passe'],
   '{n} dk\'da kaldı': ['left off at {n} min', 'bei {n} Min. aufgehört', 'arrêté à {n} min'],
   'Canlı TV': ['Live TV', 'Live-TV', 'TV en direct'],
   'Filmler': ['Movies', 'Filme', 'Films'],

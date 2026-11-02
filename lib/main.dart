@@ -69,6 +69,7 @@ class _IptvAppState extends State<IptvApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
       context.read<AppState>().lockAdult();
+      context.read<AppState>().lockSettings();
     }
   }
 

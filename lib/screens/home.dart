@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart' hide Text;
 import '../i18n.dart';
 
+import 'package:provider/provider.dart';
+
 import '../models.dart';
+import '../store.dart';
 import '../widgets.dart';
 import 'accounts.dart';
 import 'browse.dart';
@@ -37,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
         3 => const FavoritesScreen(),
         4 => const HistoryScreen(),
         5 => const AccountsScreen(),
-        _ => const SettingsScreen(),
+        _ => const _SettingsGate(),
       };
 
   @override
@@ -49,8 +52,15 @@ class _HomeScreenState extends State<HomeScreen> {
           _visited.contains(k) ? _make(k) : const SizedBox.shrink(),
       ],
     );
-    void select(int k) {
+    final st = context.read<AppState>();
+    Future<void> select(int k) async {
       if (k == _i) return;
+      if (k == 6 && !st.settingsUnlocked) {
+        final ok = await showDialog<bool>(
+            context: context, builder: (_) => const PinDialog(create: false, settings: true));
+        if (ok != true || !mounted) return;
+      }
+      if (_i == 6) st.lockSettings();
       setState(() {
         _i = k;
         _visited.add(k);
@@ -61,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     void onBack() {
       if (_stack.length > 1) {
+        if (_i == 6) st.lockSettings();
         setState(() {
           _stack.removeLast();
           _i = _stack.last;
@@ -116,6 +127,31 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }),
+    );
+  }
+}
+
+
+/// Ayarlar sekmesi: şifre girilmeden içerik gösterilmez.
+class _SettingsGate extends StatelessWidget {
+  const _SettingsGate();
+  @override
+  Widget build(BuildContext context) {
+    final s = context.watch<AppState>();
+    if (s.settingsUnlocked) return const SettingsScreen();
+    return Center(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.lock_outline, size: 48),
+        const SizedBox(height: 12),
+        const Text('Ayarlar kilitli'),
+        const SizedBox(height: 12),
+        FilledButton(
+          autofocus: true,
+          onPressed: () => showDialog<bool>(
+              context: context, builder: (_) => const PinDialog(create: false, settings: true)),
+          child: const Text('Şifreyi gir'),
+        ),
+      ]),
     );
   }
 }

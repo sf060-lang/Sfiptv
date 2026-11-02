@@ -58,12 +58,11 @@ class SettingsScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: const Text('Oynatıcı ekle'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(
+          OkTextField(
               controller: n,
               autofocus: true,
-              textInputAction: TextInputAction.next,
               decoration: InputDecoration(labelText: tr('Ad (ör. Benim oynatıcım)'))),
-          TextField(
+          OkTextField(
               controller: p,
               autocorrect: false,
               decoration: InputDecoration(labelText: tr('Paket adı (ör. org.videolan.vlc)'))),
@@ -110,23 +109,6 @@ class SettingsScreen extends StatelessWidget {
                 .showSnackBar(const SnackBar(content: Text('Listeler bir sonraki açılışta yenilenecek.')));
           },
         ),
-        const _Header('Görünüm'),
-        ListTile(
-          leading: const Icon(Icons.palette_outlined),
-          title: const Text('Tuttuğun takım'),
-          subtitle: Text(trf('{n} — uygulama renkleri takımına göre değişir', {'n': tr(teamById(s.team).name)})),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => showDialog<void>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Tuttuğun takım'),
-              content: const SingleChildScrollView(child: TeamGrid()),
-              actions: [
-                FilledButton(onPressed: () => Navigator.pop(ctx), child: const Text('Bitti')),
-              ],
-            ),
-          ),
-        ),
         const _Header('Oynatıcı'),
         ListTile(
           leading: const Icon(Icons.stream),
@@ -172,6 +154,16 @@ class SettingsScreen extends StatelessWidget {
         ),
         const _Header('Oynatıcı uygulaması'),
         ..._players(context, s),
+        const _Header('Güvenlik'),
+        ListTile(
+          leading: const Icon(Icons.lock_outline),
+          title: const Text('Ayarlar şifresini değiştir'),
+          subtitle: const Text('Varsayılan şifre 0000. Değiştirmeni öneririz.'),
+          onTap: () => showDialog<bool>(
+            context: context,
+            builder: (_) => const PinDialog(create: true, settings: true),
+          ),
+        ),
         const _Header('Yetişkin içerik'),
         ListTile(
           leading: Icon(s.adultUnlocked ? Icons.lock_open : Icons.lock_outline),

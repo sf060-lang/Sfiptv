@@ -262,6 +262,37 @@ class AppState extends ChangeNotifier {
     return true;
   }
 
+  // ---- Ayarlar şifresi (varsayılan 0000) ----
+  bool settingsUnlocked = false;
+
+  bool _checkSettingsPass(String p) {
+    final h = prefs.getString('spHash'), salt = prefs.getString('spSalt');
+    if (h == null || salt == null) return p == '0000';
+    return _hash(p, salt) == h;
+  }
+
+  bool unlockSettings(String p) {
+    if (!_checkSettingsPass(p)) return false;
+    settingsUnlocked = true;
+    notifyListeners();
+    return true;
+  }
+
+  void lockSettings() {
+    if (!settingsUnlocked) return;
+    settingsUnlocked = false;
+    notifyListeners();
+  }
+
+  Future<void> setSettingsPass(String p) async {
+    final r = Random.secure();
+    final salt = base64Url.encode(List<int>.generate(16, (_) => r.nextInt(256)));
+    await prefs.setString('spSalt', salt);
+    await prefs.setString('spHash', _hash(p, salt));
+    settingsUnlocked = true;
+    notifyListeners();
+  }
+
   void lockAdult() {
     if (!adultUnlocked) return;
     adultUnlocked = false;
