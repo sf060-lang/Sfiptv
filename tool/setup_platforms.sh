@@ -45,4 +45,5 @@ echo "-----------------------------"
 # Windows pencere basligi
 sed -i 's/L"iptv_pro"/L"SF IPTV Player"/' windows/runner/main.cpp
 
+flutter pub get && dart run flutter_launcher_icons -f tool/icons_android_windows.yaml || echo "Uygulama ikonu uretilemedi (varsayilan kalacak)"
 echo "Platform ayarlari tamam."

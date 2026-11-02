@@ -9,7 +9,7 @@ class Team {
 }
 
 const teams = <Team>[
-  Team('', 'Takımım yok', Color(0xFF5C7CFF), Color(0xFF8FA6FF), Colors.white),
+  Team('', 'Takımım yok', Color(0xFFE53945), Color(0xFF4D7CFF), Colors.white),
   Team('gs', 'Galatasaray', Color(0xFFB0062F), Color(0xFFFDB912), Colors.white),
   Team('fb', 'Fenerbahçe', Color(0xFF1F47A0), Color(0xFFFFE600), Colors.white),
   Team('bjk', 'Beşiktaş', Color(0xFFECECEC), Color(0xFFFFFFFF), Color(0xFF111111)),
@@ -30,35 +30,40 @@ const teams = <Team>[
   Team('corum', 'Çorum FK', Color(0xFFD4161C), Color(0xFFFF6B6B), Colors.white),
 ];
 
-Team teamById(String id) =>
-    teams.firstWhere((t) => t.id == id, orElse: () => teams.first);
+/// Uygulama artık tek bir lacivert + kırmızı temayla çalışır (takım seçimi kaldırıldı).
+Team teamById(String id) => teams.first;
 
-/// Takım rengine göre koyu tema.
+/// Koyu mavi (lacivert) yüzeyler + kırmızı vurgu teması.
 ThemeData buildTheme(Team t) {
-  final base = ColorScheme.fromSeed(seedColor: t.pri, brightness: Brightness.dark);
-  final bg = Color.alphaBlend(t.pri.withAlpha(20), const Color(0xFF0B0D16));
-  final bg2 = Color.alphaBlend(t.pri.withAlpha(34), const Color(0xFF11152A));
-  final bg3 = Color.alphaBlend(t.pri.withAlpha(54), const Color(0xFF1A1F36));
-  final cs = base.copyWith(
-    primary: t.pri,
-    onPrimary: t.on,
-    secondary: t.acc,
-    onSecondary: t.on,
+  const bg = Color(0xFF070F28);
+  const bg2 = Color(0xFF0C1A44);
+  const bg3 = Color(0xFF14295F);
+  const red = Color(0xFFE53945);
+  const blue = Color(0xFF4D7CFF);
+  final cs = ColorScheme.fromSeed(seedColor: red, brightness: Brightness.dark).copyWith(
+    primary: red,
+    onPrimary: Colors.white,
+    secondary: blue,
+    onSecondary: Colors.white,
+    tertiary: const Color(0xFFFF6A73),
     surface: bg,
     surfaceContainer: bg2,
     surfaceContainerHighest: bg3,
     secondaryContainer: bg3,
     onSecondaryContainer: Colors.white,
+    outline: const Color(0xFF5A6FA8),
   );
   return ThemeData(
     useMaterial3: true,
     colorScheme: cs,
     scaffoldBackgroundColor: bg,
-    focusColor: t.acc.withAlpha(90),
-    hoverColor: t.acc.withAlpha(40),
-    appBarTheme: AppBarTheme(backgroundColor: bg),
-    navigationBarTheme: NavigationBarThemeData(backgroundColor: bg2, indicatorColor: bg3),
-    navigationRailTheme: NavigationRailThemeData(backgroundColor: bg2, indicatorColor: bg3),
-    dialogTheme: DialogThemeData(backgroundColor: bg2),
+    focusColor: blue.withAlpha(110),
+    hoverColor: blue.withAlpha(50),
+    appBarTheme: const AppBarTheme(backgroundColor: bg),
+    navigationBarTheme: const NavigationBarThemeData(backgroundColor: bg2, indicatorColor: red),
+    navigationRailTheme: const NavigationRailThemeData(backgroundColor: bg2, indicatorColor: red),
+    dialogTheme: const DialogThemeData(backgroundColor: bg2),
+    cardTheme: const CardThemeData(color: bg2),
+    chipTheme: ChipThemeData(selectedColor: red, backgroundColor: bg3, labelStyle: const TextStyle(color: Colors.white)),
   );
 }

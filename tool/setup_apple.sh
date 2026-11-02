@@ -43,4 +43,5 @@ patch("macos/Podfile", [(r"^#?\s*platform :osx, '[0-9.]+'", "platform :osx, '10.
 patch("macos/Runner.xcodeproj/project.pbxproj",
       [(r"MACOSX_DEPLOYMENT_TARGET = [0-9.]+;", "MACOSX_DEPLOYMENT_TARGET = 10.15;")])
 PY
+flutter pub get && dart run flutter_launcher_icons -f tool/icons_apple.yaml || echo "Uygulama ikonu uretilemedi (varsayilan kalacak)"
 echo "Apple platform ayarlari tamam."
